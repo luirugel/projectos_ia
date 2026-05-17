@@ -1,0 +1,88 @@
+#!/bin/bash
+# =============================================================================
+# Pre-commit Hook — Security Validator Agent
+# Automatically runs on every `git commit` and blocks commits with CRITICAL issues.
+#
+# Installation (run once from your project root):
+#   cp .git/hooks/pre-commit .git/hooks/pre-commit.bak 2>/dev/null || true
+#   cp agents/pre-commit .git/hooks/pre-commit
+#   chmod +x .git/hooks/pre-commit
+#
+# To skip in an emergency: git commit --no-verify
+# =============================================================================
+
+set -euo pipefail
+
+AGENTS_DIR="$(git rev-parse --show-toplevel)/agents"
+PROMPT_FILE="$AGENTS_DIR/prompts/security.md"
+
+# Check claude CLI
+if ! command -v claude &> /dev/null; then
+  echo "⚠️  Claude Code CLI not found — skipping security scan."
+  echo "   Install from: https://claude.ai/code"
+  exit 0
+fi
+
+# Check prompt file exists
+if [ ! -f "$PROMPT_FILE" ]; then
+  echo "⚠️  Security prompt not found at $PROMPT_FILE — skipping scan."
+  exit 0
+fi
+
+# Get staged source files only (exclude lockfiles, assets, etc.)
+STAGED=$(git diff --cached --name-only --diff-filter=ACM \
+  | grep -E '\.(ts|tsx|js|jsx|py|go|rb|php|java|env|yaml|yml|json|sh)$' \
+  | grep -v -E '(package-lock\.json|yarn\.lock|pnpm-lock\.yaml|node_modules)' \
+  || true)
+
+# Nothing to scan
+if [ -z "$STAGED" ]; then
+  exit 0
+fi
+
+FILE_COUNT=$(echo "$STAGED" | wc -l | tr -d ' ')
+echo ""
+echo "🔐 Security Validator — scanning $FILE_COUNT staged file(s)..."
+echo ""
+
+# Run security agent
+RESULT=$(claude -p "$(cat "$PROMPT_FILE")" \
+  --allowedTools "Read" \
+  "Quick security scan on these staged files — focus on CRITICAL and HIGH severity only, be concise: $STAGED" 2>/dev/null || echo "SCAN_FAILED")
+
+# Handle scan failure gracefully
+if [ "$RESULT" = "SCAN_FAILED" ]; then
+  echo "⚠️  Security scan failed — proceeding with commit."
+  exit 0
+fi
+
+# Check for CRITICAL findings
+if echo "$RESULT" | grep -qi "severity: critical\|CRITICAL"; then
+  echo "╔══════════════════════════════════════════════╗"
+  echo "║  ❌ COMMIT BLOCKED — CRITICAL issue found     ║"
+  echo "╚══════════════════════════════════════════════╝"
+  echo ""
+  echo "$RESULT"
+  echo ""
+  echo "Fix the issue above and try again."
+  echo "To bypass in an emergency: git commit --no-verify"
+  echo ""
+  exit 1
+fi
+
+# Check for HIGH findings — warn but allow
+if echo "$RESULT" | grep -qi "severity: high\|HIGH"; then
+  echo "╔══════════════════════════════════════════════╗"
+  echo "║  ⚠️  HIGH severity issue found — review below  ║"
+  echo "╚══════════════════════════════════════════════╝"
+  echo ""
+  echo "$RESULT"
+  echo ""
+  echo "Commit allowed — but fix this before merging to main."
+  echo ""
+  exit 0
+fi
+
+echo "✅ Security scan passed — no critical issues found."
+echo ""
+exit 0

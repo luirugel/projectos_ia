@@ -1,0 +1,22 @@
+-- Default system categories (user_id = NULL = visible to all users)
+INSERT INTO categories (user_id, name, type, icon, color) VALUES
+(NULL, 'Alimentación',      'expense', 'utensils',       '#f59e0b'),
+(NULL, 'Transporte',        'expense', 'car',             '#3b82f6'),
+(NULL, 'Vivienda',          'expense', 'home',            '#8b5cf6'),
+(NULL, 'Salud',             'expense', 'heart-pulse',     '#ef4444'),
+(NULL, 'Educación',         'expense', 'graduation-cap',  '#06b6d4'),
+(NULL, 'Entretenimiento',   'expense', 'film',            '#ec4899'),
+(NULL, 'Ropa',              'expense', 'shirt',           '#f97316'),
+(NULL, 'Tecnología',        'expense', 'laptop',          '#6366f1'),
+(NULL, 'Servicios básicos', 'expense', 'zap',             '#84cc16'),
+(NULL, 'Deudas',            'expense', 'credit-card',     '#dc2626'),
+(NULL, 'Mascotas',          'expense', 'paw-print',       '#d97706'),
+(NULL, 'Viajes',            'expense', 'plane',           '#0891b2'),
+(NULL, 'Gimnasio',          'expense', 'dumbbell',        '#16a34a'),
+(NULL, 'Otros gastos',      'expense', 'more-horizontal', '#9ca3af'),
+(NULL, 'Salario',           'income',  'briefcase',       '#10b981'),
+(NULL, 'Freelance',         'income',  'code',            '#059669'),
+(NULL, 'Inversiones',       'income',  'trending-up',     '#047857'),
+(NULL, 'Alquiler',          'income',  'building',        '#065f46'),
+(NULL, 'Regalo',            'income',  'gift',            '#d1fae5'),
+(NULL, 'Otros ingresos',    'income',  'plus-circle',     '#6ee7b7');

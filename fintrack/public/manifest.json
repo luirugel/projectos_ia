@@ -1,0 +1,41 @@
+{
+  "name": "FinTrack — Finanzas Personales",
+  "short_name": "FinTrack",
+  "description": "Controla tus gastos, ingresos, presupuestos y metas de ahorro",
+  "id": "/dashboard",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "lang": "es",
+  "dir": "ltr",
+  "display": "standalone",
+  "background_color": "#f6f3ee",
+  "theme_color": "#0f172a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Nueva transacción",
+      "url": "/transactions?new=1",
+      "description": "Registrar un nuevo movimiento"
+    },
+    {
+      "name": "Ver reportes",
+      "url": "/reports",
+      "description": "Ver análisis financiero"
+    }
+  ]
+}

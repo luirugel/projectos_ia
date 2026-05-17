@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-15T00:00:00Z",
+  "title": "Design System: FinTrack",
+  "extensions": {
+    "colorMeta": {
+      "canvas-cream": { "role": "neutral", "displayName": "Canvas Cream", "canonical": "oklch(96.5% 0.006 85)", "tonalRamp": ["oklch(20% 0.006 85)", "oklch(30% 0.006 85)", "oklch(42% 0.006 85)", "oklch(55% 0.006 85)", "oklch(68% 0.006 85)", "oklch(80% 0.006 85)", "oklch(90% 0.006 85)", "oklch(96.5% 0.006 85)"] },
+      "surface-cream-alt": { "role": "neutral", "displayName": "Surface Cream Alt", "canonical": "oklch(94% 0.006 85)" },
+      "border-warm": { "role": "neutral", "displayName": "Border Warm", "canonical": "oklch(83% 0.008 80)" },
+      "ink-primary": { "role": "neutral", "displayName": "Ink Primary", "canonical": "oklch(21% 0.04 264)", "tonalRamp": ["oklch(15% 0.04 264)", "oklch(21% 0.04 264)", "oklch(30% 0.035 261)", "oklch(40% 0.03 258)", "oklch(50% 0.03 256)", "oklch(65% 0.025 254)", "oklch(82% 0.02 250)", "oklch(96% 0.01 248)"] },
+      "ink-muted": { "role": "neutral", "displayName": "Ink Muted", "canonical": "oklch(37% 0.03 258)" },
+      "ink-subtle": { "role": "neutral", "displayName": "Ink Subtle", "canonical": "oklch(47% 0.03 256)" },
+      "income-green": { "role": "secondary", "displayName": "Income Green", "canonical": "oklch(72% 0.15 163)", "tonalRamp": ["oklch(25% 0.07 163)", "oklch(35% 0.10 163)", "oklch(45% 0.13 163)", "oklch(55% 0.15 163)", "oklch(63% 0.16 163)", "oklch(72% 0.15 163)", "oklch(85% 0.10 163)", "oklch(95% 0.04 163)"] },
+      "expense-red": { "role": "secondary", "displayName": "Expense Red", "canonical": "oklch(64% 0.21 25)", "tonalRamp": ["oklch(25% 0.10 25)", "oklch(35% 0.15 25)", "oklch(45% 0.19 25)", "oklch(55% 0.21 25)", "oklch(64% 0.21 25)", "oklch(74% 0.17 25)", "oklch(86% 0.10 25)", "oklch(95% 0.04 25)"] },
+      "action-blue": { "role": "primary", "displayName": "Action Blue", "canonical": "oklch(62% 0.18 258)", "tonalRamp": ["oklch(25% 0.09 258)", "oklch(34% 0.13 258)", "oklch(44% 0.17 258)", "oklch(53% 0.19 258)", "oklch(62% 0.18 258)", "oklch(72% 0.14 258)", "oklch(85% 0.08 258)", "oklch(95% 0.03 258)"] },
+      "domain-accounts-violet": { "role": "tertiary", "displayName": "Accounts Violet", "canonical": "oklch(62% 0.20 292)" },
+      "domain-budgets-amber": { "role": "tertiary", "displayName": "Budgets Amber", "canonical": "oklch(77% 0.16 70)" },
+      "domain-goals-cyan": { "role": "tertiary", "displayName": "Goals Cyan", "canonical": "oklch(70% 0.13 210)" },
+      "domain-reports-indigo": { "role": "tertiary", "displayName": "Reports Indigo", "canonical": "oklch(58% 0.20 274)" },
+      "domain-ai-purple": { "role": "tertiary", "displayName": "Assistant Purple", "canonical": "oklch(62% 0.23 300)" },
+      "domain-neutral-slate": { "role": "tertiary", "displayName": "Settings Slate", "canonical": "oklch(55% 0.035 256)" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero figures — primary balances and headline amounts only. Tabular numerals." },
+      "headline": { "displayName": "Headline", "purpose": "Page and major section titles." },
+      "title": { "displayName": "Title", "purpose": "Card titles and dialog headers." },
+      "body": { "displayName": "Body", "purpose": "Default running text. Measure capped at 65-75ch." },
+      "label": { "displayName": "Label", "purpose": "Uppercase eyebrows, metric captions, nav group headers." },
+      "mono": { "displayName": "Money Figures", "purpose": "Geist Mono, tabular-nums, every monetary value." }
+    },
+    "shadows": [
+      { "name": "card", "value": "0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)", "purpose": "Default resting elevation for cards in light mode." },
+      { "name": "md", "value": "0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.05)", "purpose": "Hover lift." },
+      { "name": "lg", "value": "0 8px 24px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06)", "purpose": "Overlays and dialogs." },
+      { "name": "pebble", "value": "0 3px 10px var(--hue)35, 0 1px 2px rgba(0,0,0,0.07), inset 0 1.5px 2px rgba(255,255,255,0.9)", "purpose": "The GlossyIcon signature only — not a reusable elevation step." }
+    ],
+    "motion": [
+      { "name": "interactive", "value": "all 150ms ease-out", "purpose": "Default state transition for buttons, inputs, links." },
+      { "name": "press-scale", "value": "transform 150ms ease-out; active scale(0.97)", "purpose": "Tactile press feedback on buttons and tappable cards." },
+      { "name": "sidebar", "value": "width/transform 300ms ease", "purpose": "Sidebar collapse and mobile drawer." },
+      { "name": "progress", "value": "all 700ms ease-out", "purpose": "Progress and savings-rate fills animating toward a value." }
+    ],
+    "breakpoints": [
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Default neutral action. Press-scale is the core tactile micro-interaction.",
+      "html": "<button class=\"ds-btn-primary\">Guardar transacción</button>",
+      "css": ".ds-btn-primary { display:inline-flex; align-items:center; justify-content:center; height:40px; padding:8px 16px; border:none; border-radius:6px; background:#3b82f6; color:#fff; font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,sans-serif; font-size:0.875rem; font-weight:500; cursor:pointer; transition:all 150ms ease-out; } .ds-btn-primary:hover { background:#3473dd; } .ds-btn-primary:focus-visible { outline:none; box-shadow:0 0 0 2px #f6f3ee,0 0 0 4px #3b82f6; } .ds-btn-primary:active { transform:scale(0.97); }"
+    },
+    {
+      "name": "Income Button",
+      "kind": "button",
+      "refersTo": "button-income",
+      "description": "Money-committing positive action only. Never general emphasis.",
+      "html": "<button class=\"ds-btn-income\">Registrar ingreso</button>",
+      "css": ".ds-btn-income { display:inline-flex; align-items:center; justify-content:center; height:40px; padding:8px 16px; border:none; border-radius:6px; background:#10b981; color:#fff; font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,sans-serif; font-size:0.875rem; font-weight:500; cursor:pointer; transition:all 150ms ease-out; } .ds-btn-income:hover { background:#0ea672; } .ds-btn-income:active { transform:scale(0.97); }"
+    },
+    {
+      "name": "Glossy Icon Pebble",
+      "kind": "custom",
+      "refersTo": "signature",
+      "description": "The brand's one tactile indulgence. A circular hue-tinted glossy well around a domain icon.",
+      "html": "<div class=\"ds-pebble\"><span class=\"ds-pebble-gloss\"></span><svg class=\"ds-pebble-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 6v6l4 2\"/></svg></div>",
+      "css": ".ds-pebble { position:relative; height:32px; width:32px; border-radius:9999px; display:flex; align-items:center; justify-content:center; overflow:hidden; background:radial-gradient(circle at 38% 32%, rgba(255,255,255,0.96) 0%, color-mix(in srgb,#06b6d4 20%,white) 100%); box-shadow:0 3px 10px #06b6d435,0 1px 2px rgba(0,0,0,0.07),inset 0 1.5px 2px rgba(255,255,255,0.9); border:1.5px solid color-mix(in srgb,#06b6d4 28%,transparent); } .ds-pebble-gloss { position:absolute; inset:0; border-radius:9999px; pointer-events:none; background:radial-gradient(ellipse at 35% 26%, rgba(255,255,255,0.60) 0%, transparent 62%); } .ds-pebble-icon { position:relative; z-index:10; height:14px; width:14px; color:#06b6d4; filter:drop-shadow(0 1px 1.5px #06b6d455); }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Flat warm-white surface on cream. Soft ambient shadow in light mode.",
+      "html": "<div class=\"ds-card\"><p class=\"ds-card-title\">Resumen del mes</p><p class=\"ds-card-body\">Tus gastos van por buen camino.</p></div>",
+      "css": ".ds-card { background:#ffffff; color:#0f172a; border:1px solid #d2cdc4; border-radius:12px; padding:24px; box-shadow:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04); } .ds-card-title { margin:0 0 6px; font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,sans-serif; font-size:1.125rem; font-weight:600; } .ds-card-body { margin:0; font-size:0.875rem; font-weight:400; color:#475569; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Quiet white field. Ring on focus, border warms on hover. No state-by-color-alone.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Descripción\" />",
+      "css": ".ds-input { height:40px; width:100%; padding:8px 12px; border:1px solid #d2cdc4; border-radius:6px; background:#ffffff; color:#0f172a; font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,sans-serif; font-size:0.875rem; transition:all 150ms ease-out; } .ds-input::placeholder { color:#475569; } .ds-input:hover { border-color:#b9b3a8; } .ds-input:focus-visible { outline:none; box-shadow:0 0 0 2px #f6f3ee,0 0 0 4px #3b82f6; }"
+    },
+    {
+      "name": "Sidebar Nav Item (active)",
+      "kind": "nav",
+      "refersTo": "nav",
+      "description": "Active state is a faint domain-hue wash plus the active pebble. Never a heavy fill or side-stripe.",
+      "html": "<a class=\"ds-nav-item ds-nav-active\" href=\"#\"><span class=\"ds-nav-dot\"></span><span>Metas</span></a>",
+      "css": ".ds-nav-item { display:flex; align-items:center; gap:10px; padding:6px 8px; border-radius:12px; font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,sans-serif; font-size:0.875rem; font-weight:500; color:#475569; text-decoration:none; transition:all 150ms ease-out; } .ds-nav-item:hover { color:#0f172a; background:#f0ede8; } .ds-nav-active { color:#0f172a; background:rgba(6,182,212,0.07); } .ds-nav-dot { height:18px; width:18px; border-radius:9999px; background:radial-gradient(circle at 38% 32%, #fff 0%, color-mix(in srgb,#06b6d4 20%,white) 100%); border:1.5px solid color-mix(in srgb,#06b6d4 28%,transparent); box-shadow:0 2px 6px #06b6d435; }"
+    },
+    {
+      "name": "Trend Badge",
+      "kind": "chip",
+      "refersTo": "badge-income",
+      "description": "Direction pill: icon + sign + color together, so meaning never depends on color alone.",
+      "html": "<span class=\"ds-trend\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 17l6-6 4 4 8-8\"/><path d=\"M21 7v6h-6\"/></svg>+12.4%</span>",
+      "css": ".ds-trend { display:inline-flex; align-items:center; gap:2px; padding:2px 8px; border-radius:9999px; background:rgba(16,185,129,0.15); color:#10b981; font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,sans-serif; font-size:0.75rem; font-weight:600; } .ds-trend svg { height:12px; width:12px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Encouraging Ledger",
+    "overview": "FinTrack looks like a serious financial record that happens to be on your side. The substrate is warm paper, not a cold dashboard: a cream canvas, ink-dark figures, and a small number of crafted tactile highlights that reward attention without ever shouting. Encouragement here is earned and shown, never decorated on. The system holds depth and restraint in tension and resolves it with one rule: tactility is a single voice, spent deliberately on the things that carry meaning, and withheld everywhere else. It explicitly rejects childish gamification and the generic SaaS dashboard reflex.",
+    "keyCharacteristics": [
+      "Warm-cream paper canvas (#f6f3ee), ink-dark figures — light default, dark navy considered alternate.",
+      "A mapped domain spectrum: each financial domain owns one learnable hue; color is wayfinding and signal, never decoration.",
+      "One tactile signature (the glossy icon pebble) against otherwise flat, restrained surfaces.",
+      "Honest progress made visible: every metric carries a real trend against the previous period.",
+      "Tabular-figure discipline: money always aligns and never reflows."
+    ],
+    "rules": [
+      { "name": "The Color-Is-Meaning Rule", "body": "Every color on screen must answer 'what does this signify?' — income, expense, a domain, a state. A hue used purely to look lively is forbidden.", "section": "colors" },
+      { "name": "The Honest Signal Rule", "body": "Green and red encode direction of truth, not sentiment. Never recolor a real loss green; never red-flash a neutral number for drama.", "section": "colors" },
+      { "name": "The Tabular Money Rule", "body": "Every monetary value renders with tabular-nums (Geist Mono). Proportional digits on money are prohibited.", "section": "typography" },
+      { "name": "The Weight-Not-Color Hierarchy Rule", "body": "Emphasis comes from weight and scale, never from gradient text or coloring a heading for importance.", "section": "typography" },
+      { "name": "The One Tactile Voice Rule", "body": "Dimensional depth is spent in exactly one place: the glossy domain pebble. Cards, inputs, sheets stay flat at rest and lift only on interaction.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep Canvas Cream (#f6f3ee) as the default; treat dark navy as the considered alternate, not an afterthought.",
+      "Do render every monetary value in tabular Geist Mono so columns align and totals never jump.",
+      "Do make every color answer 'what does this signify?' — income, expense, domain, or state.",
+      "Do pair direction with a non-color cue (sign, up/down icon, or position) everywhere a gain/loss is shown.",
+      "Do spend dimensional depth only on the GlossyIcon pebble; keep cards and panels flat at rest.",
+      "Do show progress honestly — real trend vs. the previous period, even when the trend is bad."
+    ],
+    "donts": [
+      "Don't add childish gamification: no cartoon mascots, no confetti sprayed on actions, no patronizing badges or trophies, no 'Great job!!!' tone.",
+      "Don't rely on red/green alone to convey income vs. expense — always add sign/icon/position.",
+      "Don't use the generic SaaS look: no big-number hero-metric template, no grid of identical icon cards, no gradient text.",
+      "Don't use side-stripe borders (border-left/right > 1px as a colored accent).",
+      "Don't nest a card inside a card, or wrap every element in a container.",
+      "Don't introduce a second 3D/tactile treatment to compete with the pebble.",
+      "Don't recolor a real loss to look positive, or flash neutral numbers red for drama."
+    ]
+  }
+}

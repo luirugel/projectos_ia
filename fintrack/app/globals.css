@@ -1,0 +1,184 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* ── Light mode (default) ────────────────────────────── */
+  /* shadcn semantic tokens repointed to the warm "Encouraging Ledger"
+     palette so every primitive (Dialog, Card, Input, Select, Sheet,
+     DropdownMenu, Badge…) renders on the cream system. One surface
+     system: these mirror the --app-* values below. Do not reintroduce
+     the slate defaults. */
+  :root {
+    --background: 37.5 30.8% 94.9%;     /* canvas cream  #f6f3ee */
+    --foreground: 222.2 47.4% 11.2%;    /* ink           #0f172a */
+    --card: 0 0% 100%;                  /* surface white #ffffff */
+    --card-foreground: 222.2 47.4% 11.2%;
+    --popover: 0 0% 100%;               /* raised white  #ffffff */
+    --popover-foreground: 222.2 47.4% 11.2%;
+    --primary: 217.2 91.2% 59.8%;       /* action blue   #3b82f6 */
+    --primary-foreground: 0 0% 100%;    /* white on blue (DESIGN.md) */
+    --secondary: 37.5 21.1% 92.5%;      /* cream alt      #f0ede8 */
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 37.5 21.1% 92.5%;          /* cream alt      #f0ede8 */
+    --muted-foreground: 215.3 19.3% 34.5%; /* ink subtle #475569 — AA 6.7:1 on cream */
+    --accent: 37.5 21.1% 92.5%;         /* cream alt      #f0ede8 */
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;       /* expense red   #ef4444 */
+    --destructive-foreground: 0 0% 100%;
+    --border: 38.6 13.5% 79.6%;         /* warm border   #d2cdc4 */
+    --input: 38.6 13.5% 79.6%;
+    --ring: 217.2 91.2% 59.8%;          /* action blue   #3b82f6 */
+    --radius: 0.5rem;
+
+    /* ── App surface tokens — RGB triplets for alpha support ── */
+    --app-bg:            246 243 238;   /* warm cream    #f6f3ee */
+    --app-surface:       255 255 255;   /* white         #ffffff */
+    --app-surface-alt:   240 237 232;   /* warm alt      #f0ede8  (darker → more contrast) */
+    --app-border:        210 205 196;   /* warm border   #d2cdc4  (was #e5e0d7 — now visible) */
+
+    /* ── Text tokens — WCAG AA verified on #f6f3ee background ── */
+    /* #0f172a / slate-900 : 18.4:1  ✓ */
+    --app-text:           15  23  42;
+    /* #334155 / slate-700 :  9.7:1  ✓ (was slate-600 / 6.1:1 — promoted for clearer hierarchy) */
+    --app-text-muted:     51  65  85;
+    /* #475569 / slate-600 :  6.7:1  ✓ (was slate-500 / 4.4:1 — FAILED on cream bg, now fixed) */
+    --app-text-subtle:    71  85 105;
+
+    /* ── Elevation — card box shadows ── */
+    --app-shadow-card:    0 2px 4px rgba(15,23,42,0.06), 0 6px 16px rgba(15,23,42,0.06);
+    --app-shadow-md:      0 4px 16px rgba(15,23,42,0.10), 0 2px 6px rgba(15,23,42,0.06);
+    --app-shadow-lg:      0 8px 32px rgba(15,23,42,0.14), 0 4px 10px rgba(15,23,42,0.08);
+  }
+
+  /* ── Dark mode ───────────────────────────────────────── */
+  /* Dark = the considered navy alternate. shadcn tokens mirror the
+     dark --app-* values so primitives match the navy canvas. */
+  .dark {
+    --background: 222.2 47.4% 11.2%;    /* dark canvas    #0f172a */
+    --foreground: 210 40% 98%;          /* dark ink       #f8fafc */
+    --card: 217.2 32.6% 17.5%;          /* dark surface   #1e293b */
+    --card-foreground: 210 40% 98%;
+    --popover: 217.2 32.6% 17.5%;       /* dark surface   #1e293b */
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;       /* action blue    #3b82f6 */
+    --primary-foreground: 0 0% 100%;    /* white on blue (consistent w/ light) */
+    --secondary: 215.3 25% 26.7%;       /* dark alt       #334155 */
+    --secondary-foreground: 210 40% 98%;
+    --muted: 215.3 25% 26.7%;           /* dark alt       #334155 */
+    --muted-foreground: 215 20.2% 65.1%; /* dark ink muted #94a3b8 — AA 7.3:1 */
+    --accent: 215.3 25% 26.7%;          /* dark alt       #334155 */
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 84.2% 60.2%;       /* expense red    #ef4444 (consistent) */
+    --destructive-foreground: 0 0% 100%;
+    --border: 215.3 25% 26.7%;          /* dark border    #334155 */
+    --input: 215.3 25% 26.7%;
+    --ring: 217.2 91.2% 59.8%;          /* action blue    #3b82f6 */
+
+    --app-bg:             15  23  42;   /* #0f172a */
+    --app-surface:        30  41  59;   /* #1e293b */
+    --app-surface-alt:    51  65  85;   /* #334155 */
+    --app-border:         51  65  85;   /* #334155 */
+
+    /* ── Text tokens — WCAG AA verified on #0f172a background ── */
+    /* #f8fafc / slate-50  : 18.7:1  ✓ */
+    --app-text:          248 250 252;
+    /* #94a3b8 / slate-400 :  7.3:1  ✓ */
+    --app-text-muted:    148 163 184;
+    /* #7b8fa3 (between slate-400/500) : 5.1:1  ✓ (was slate-500 / 3.5:1 — FAILED, now fixed) */
+    --app-text-subtle:   123 143 163;
+
+    /* ── Elevation — minimal shadow in dark (relies on border instead) ── */
+    --app-shadow-card:    0 1px 3px rgba(0,0,0,0.30), 0 1px 2px rgba(0,0,0,0.20);
+    --app-shadow-md:      0 4px 12px rgba(0,0,0,0.40), 0 2px 4px rgba(0,0,0,0.25);
+    --app-shadow-lg:      0 8px 24px rgba(0,0,0,0.50), 0 2px 6px rgba(0,0,0,0.30);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Consistent focus rings — solid action blue, ≥3:1 contrast (WCAG 2.4.11) */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* ── prefers-reduced-motion — disable all non-essential animations ── */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+    /* Keep skeleton pulse readable but static */
+    .animate-pulse {
+      animation: none !important;
+      opacity: 0.6;
+    }
+    /* Keep spinners spinning — they convey loading state, not decoration */
+    .animate-spin {
+      animation-duration: 1s !important;
+    }
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* ── Card elevation utility ── */
+  .card-elevated {
+    box-shadow: var(--app-shadow-card);
+  }
+  .card-elevated-md {
+    box-shadow: var(--app-shadow-md);
+  }
+
+  /* ── Tabular numbers for financial data ── */
+  .num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  /* ── Smooth base transition for interactive elements ── */
+  .interactive {
+    @apply transition-all duration-150 ease-out cursor-pointer;
+  }
+
+  /* ── Subtle press scale for tappable cards ── */
+  .press-scale {
+    @apply transition-transform duration-150 active:scale-[0.98];
+  }
+
+  /* ── Hide number-input spinners — money fields use inputmode=decimal ── */
+  .no-spinner::-webkit-outer-spin-button,
+  .no-spinner::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .no-spinner {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+}
