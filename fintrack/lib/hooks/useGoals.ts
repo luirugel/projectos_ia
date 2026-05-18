@@ -119,10 +119,14 @@ export function useGoals(): UseGoalsReturn {
   }, [fetch])
 
   const getContributions = useCallback(async (goalId: string): Promise<GoalContribution[]> => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return []
+
     const { data } = await supabase
       .from('goal_contributions')
       .select(CONTRIBUTION_COLUMNS)
       .eq('goal_id', goalId)
+      .eq('user_id', user.id)
       .order('date', { ascending: false })
 
     return (data ?? []) as GoalContribution[]

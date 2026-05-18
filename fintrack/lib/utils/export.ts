@@ -10,10 +10,12 @@ const TYPE_LABEL: Record<string, string> = {
 function escapeCsv(value: string | number | null | undefined): string {
   if (value === null || value === undefined) return ''
   const str = String(value)
-  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-    return `"${str.replace(/"/g, '""')}"`
+  // Prefix formula-injection triggers so spreadsheet apps don't execute them
+  const safe = /^[=+\-@\t\r]/.test(str) ? `'${str}` : str
+  if (safe.includes(',') || safe.includes('"') || safe.includes('\n')) {
+    return `"${safe.replace(/"/g, '""')}"`
   }
-  return str
+  return safe
 }
 
 export function exportTransactionsToCsv(transactions: Transaction[]): void {

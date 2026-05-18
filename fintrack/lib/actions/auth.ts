@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
+import { toUserMessage } from "@/lib/utils/errors"
 
 export async function signIn(formData: FormData) {
   const supabase = await createClient()
@@ -13,7 +14,7 @@ export async function signIn(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword({ email, password })
 
   if (error) {
-    return { error: error.message }
+    return { error: toUserMessage(error) }
   }
 
   revalidatePath("/", "layout")
@@ -37,7 +38,7 @@ export async function signUp(formData: FormData) {
   })
 
   if (error) {
-    return { error: error.message }
+    return { error: toUserMessage(error) }
   }
 
   return { success: "Revisa tu correo para confirmar tu cuenta." }
@@ -53,7 +54,7 @@ export async function forgotPassword(formData: FormData) {
   })
 
   if (error) {
-    return { error: error.message }
+    return { error: toUserMessage(error) }
   }
 
   return { success: "Revisa tu correo para restablecer tu contraseña." }
@@ -70,7 +71,7 @@ export async function signInWithGoogle() {
   })
 
   if (error) {
-    return { error: error.message }
+    return { error: toUserMessage(error) }
   }
 
   if (data.url) {

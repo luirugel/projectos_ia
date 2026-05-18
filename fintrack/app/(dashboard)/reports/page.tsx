@@ -16,10 +16,10 @@ import { getLast6Months, getCurrentMonthRange, toISODate } from '@/lib/utils/dat
 import type { DashboardPeriod } from '@/types/database'
 
 const PERIODS: { key: DashboardPeriod; label: string }[] = [
-  { key: 'week',    label: 'Semana'     },
-  { key: 'month',   label: 'Mes'        },
-  { key: 'quarter', label: 'Trimestre'  },
-  { key: 'year',    label: 'Año'        },
+  { key: 'week',    label: 'Semana'    },
+  { key: 'month',   label: 'Mes'       },
+  { key: 'quarter', label: 'Trimestre' },
+  { key: 'year',    label: 'Año'       },
 ]
 
 interface MonthlyData { month: string; income: number; expenses: number }
@@ -52,7 +52,7 @@ function useReportsData() {
     setMonthly(months.map((m, i) => {
       const [inc, exp] = monthlyResults[i]
       return {
-        month: m.label,
+        month:    m.label,
         income:   (inc.data ?? []).reduce((s, t) => s + Number(t.amount), 0),
         expenses: (exp.data ?? []).reduce((s, t) => s + Number(t.amount), 0),
       }
@@ -72,13 +72,17 @@ function useReportsData() {
   return { monthly, daily, loading }
 }
 
-function PieTooltip({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number; payload: { color: string } }> }) {
+function PieTooltip({ active, payload }: {
+  active?: boolean
+  payload?: Array<{ name: string; value: number; payload: { color: string } }>
+}) {
   if (!active || !payload?.length) return null
   const item = payload[0]
   return (
-    <div className="bg-app-surface border border-app-border rounded-lg px-3 py-2 card-elevated-md text-sm">
-      <p className="text-app-text font-medium">{item.name}</p>
-      <p className="text-app-text-muted">{formatCurrency(item.value)}</p>
+    <div className="bg-app-surface border border-app-border/40 rounded-xl px-3 py-2 text-sm"
+      style={{ boxShadow: 'var(--app-shadow-md)' }}>
+      <p className="text-app-text font-semibold">{item.name}</p>
+      <p className="text-app-text-subtle">{formatCurrency(item.value)}</p>
     </div>
   )
 }
@@ -87,8 +91,7 @@ export default function ReportesPage() {
   const { summary, loading: summaryLoading, periodType, setPeriodType } = useDashboardSummary()
   const { monthly, daily, loading: chartsLoading } = useReportsData()
 
-  const isLoading = summaryLoading || chartsLoading
-
+  const isLoading     = summaryLoading || chartsLoading
   const totalIncome   = summary?.total_income   ?? 0
   const totalExpenses = summary?.total_expenses  ?? 0
   const netBalance    = totalIncome - totalExpenses
@@ -105,26 +108,38 @@ export default function ReportesPage() {
   const periodLabel = PERIODS.find((p) => p.key === periodType)?.label ?? 'Mes'
 
   const summaryCards = [
-    { label: `Ingresos — ${periodLabel}`, value: totalIncome,   icon: TrendingUp,   color: '#10b981' },
-    { label: `Gastos — ${periodLabel}`,   value: totalExpenses, icon: TrendingDown, color: '#ef4444' },
-    { label: 'Balance neto',              value: netBalance,    icon: Wallet,       color: netBalance >= 0 ? '#3b82f6' : '#ef4444' },
+    { label: `Ingresos — ${periodLabel}`, value: totalIncome,   icon: TrendingUp,   color: '#10b981', bg: 'bg-income/10' },
+    { label: `Gastos — ${periodLabel}`,   value: totalExpenses, icon: TrendingDown, color: '#ef4444', bg: 'bg-expense/10' },
+    {
+      label: 'Balance neto',
+      value: netBalance,
+      icon: Wallet,
+      color: netBalance >= 0 ? '#3b82f6' : '#ef4444',
+      bg: netBalance >= 0 ? 'bg-primary/10' : 'bg-expense/10',
+    },
   ]
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+    <div className="space-y-5 pb-8">
+
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 animate-fade-up">
         <div>
-          <h1 className="text-2xl font-bold text-app-text">Reportes</h1>
-          <p className="text-sm text-app-text-subtle mt-0.5">Análisis de tus finanzas</p>
+          <h1 className="text-3xl font-black text-app-text tracking-tight leading-tight">Reportes</h1>
+          <p className="text-xs text-app-text-subtle mt-1.5">Análisis de tus finanzas personales</p>
         </div>
-        <div className="flex items-center bg-app-surface-alt rounded-lg p-0.5 gap-0.5 self-start sm:self-auto border border-app-border/60">
+        {/* Period selector — matches dashboard style */}
+        <div
+          className="flex items-center bg-app-surface-alt rounded-xl p-1 gap-0.5 self-start sm:self-auto border border-app-border/40"
+          style={{ boxShadow: 'var(--app-shadow-card)' }}
+        >
           {PERIODS.map(({ key, label }) => (
             <button
               key={key}
               onClick={() => setPeriodType(key)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 ${
                 periodType === key
-                  ? 'bg-app-surface text-app-text shadow-sm border border-app-border/40'
+                  ? 'bg-slate-900 text-white shadow-sm'
                   : 'text-app-text-subtle hover:text-app-text'
               }`}
             >
@@ -135,29 +150,37 @@ export default function ReportesPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {summaryCards.map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="bg-app-surface border border-app-border/60 rounded-xl p-4 flex items-center gap-3">
-            <Icon className="h-6 w-6 shrink-0" strokeWidth={1.75} style={{ color }} />
-            <div>
-              <p className="text-xs text-app-text-subtle font-medium">{label}</p>
-              {isLoading ? (
-                <Skeleton className="h-6 w-28 mt-1 bg-app-surface-alt" />
-              ) : (
-                <p className="text-xl font-bold mt-0.5" style={{ color }}>{formatCurrency(value)}</p>
-              )}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-fade-up" style={{ animationDelay: '60ms' }}>
+        {summaryCards.map(({ label, value, icon: Icon, color, bg }) => (
+          <div
+            key={label}
+            className="bg-app-surface border border-app-border/40 rounded-2xl p-5 relative overflow-hidden"
+            style={{ boxShadow: 'var(--app-shadow-card)' }}
+          >
+            {/* Icon badge — top right */}
+            <div className={`absolute top-4 right-4 h-10 w-10 rounded-full flex items-center justify-center ${bg}`}>
+              <Icon className="h-5 w-5" strokeWidth={1.75} style={{ color }} />
             </div>
+            <p className="text-xs font-semibold text-app-text-subtle mb-2 pr-12">{label}</p>
+            {isLoading ? (
+              <Skeleton className="h-8 w-28 bg-app-surface-alt" />
+            ) : (
+              <p className="text-2xl font-black tabular-nums" style={{ color }}>{formatCurrency(value)}</p>
+            )}
           </div>
         ))}
       </div>
 
       {/* Charts row */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 animate-fade-up" style={{ animationDelay: '120ms' }}>
 
         {/* Donut — Gastos por categoría */}
-        <div className="lg:col-span-2 bg-app-surface border border-app-border/60 rounded-xl p-4 flex flex-col">
-          <div className="mb-3">
-            <h2 className="text-sm font-semibold text-app-text">Gastos por categoría</h2>
+        <div
+          className="lg:col-span-2 bg-app-surface border border-app-border/40 rounded-2xl p-5 flex flex-col"
+          style={{ boxShadow: 'var(--app-shadow-md)' }}
+        >
+          <div className="mb-4">
+            <h2 className="text-base font-bold text-app-text">Gastos por categoría</h2>
             <p className="text-xs text-app-text-subtle mt-0.5 capitalize">{periodLabel} actual</p>
           </div>
           {summaryLoading ? (
@@ -172,12 +195,21 @@ export default function ReportesPage() {
               ))}
             </div>
           ) : pieData.length === 0 ? (
-            <div className="flex items-center justify-center h-56 text-app-text-subtle text-sm">Sin gastos registrados</div>
+            <div className="flex items-center justify-center h-56 text-app-text-subtle text-sm">
+              Sin gastos registrados
+            </div>
           ) : (
             <>
               <ResponsiveContainer width="100%" height={180}>
                 <PieChart>
-                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={52} outerRadius={82} paddingAngle={3} dataKey="value" stroke="none" cornerRadius={6}>
+                  <Pie
+                    data={pieData}
+                    cx="50%" cy="50%"
+                    innerRadius={52} outerRadius={82}
+                    paddingAngle={3} dataKey="value"
+                    stroke="none" cornerRadius={6}
+                    isAnimationActive animationDuration={700} animationEasing="ease-out"
+                  >
                     {pieData.map((entry, i) => (
                       <Cell key={i} fill={entry.color} />
                     ))}
@@ -207,10 +239,10 @@ export default function ReportesPage() {
                 {pieData.map((item, i) => (
                   <div key={i} className="flex items-center gap-2.5">
                     <CategoryIcon icon={item.icon} color={item.color} size="xs" />
-                    <span className="flex-1 text-xs font-medium text-app-text truncate">{item.name}</span>
-                    <span className="text-[10px] text-app-text-subtle tabular-nums shrink-0">{item.count} tx</span>
-                    <span className="text-[10px] text-app-text-subtle tabular-nums w-8 text-right shrink-0">{item.pct.toFixed(0)}%</span>
-                    <span className="text-xs font-semibold tabular-nums w-16 text-right shrink-0" style={{ color: item.color }}>
+                    <span className="flex-1 text-xs font-semibold text-app-text truncate">{item.name}</span>
+                    <span className="text-xs text-app-text-subtle tabular-nums shrink-0">{item.count} tx</span>
+                    <span className="text-xs text-app-text-subtle tabular-nums w-8 text-right shrink-0">{item.pct.toFixed(0)}%</span>
+                    <span className="text-xs font-bold tabular-nums w-16 text-right shrink-0" style={{ color: item.color }}>
                       {formatCurrency(item.value)}
                     </span>
                   </div>
@@ -221,29 +253,26 @@ export default function ReportesPage() {
         </div>
 
         {/* Bar chart — Ingresos vs Gastos */}
-        <div className="lg:col-span-3 bg-app-surface border border-app-border/60 rounded-xl p-4">
+        <div
+          className="lg:col-span-3 bg-app-surface border border-app-border/40 rounded-2xl p-5"
+          style={{ boxShadow: 'var(--app-shadow-md)' }}
+        >
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-sm font-semibold text-app-text">Ingresos vs Gastos</h2>
+              <h2 className="text-base font-bold text-app-text">Ingresos vs Gastos</h2>
               <p className="text-xs text-app-text-subtle mt-0.5">Últimos 6 meses</p>
             </div>
             <div className="flex items-center gap-3 text-xs text-app-text-subtle">
-              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-income inline-block" />Ingresos</span>
               <span className="flex items-center gap-1.5">
-                <span
-                  className="w-2.5 h-2.5 inline-block rounded-[2px]"
-                  style={{
-                    backgroundColor: 'rgba(239,68,68,0.25)',
-                    backgroundImage:
-                      'repeating-linear-gradient(45deg,#ef4444,#ef4444 2px,transparent 2px,transparent 4px)',
-                  }}
-                />
-                Gastos
+                <span className="w-2.5 h-2.5 rounded-sm bg-income inline-block" />Ingresos
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-sm bg-expense/40 inline-block" />Gastos
               </span>
             </div>
           </div>
           {chartsLoading ? (
-            <Skeleton className="h-[260px] w-full bg-app-surface-alt rounded-lg" />
+            <Skeleton className="h-[260px] w-full bg-app-surface-alt rounded-xl" />
           ) : (
             <MonthlyBarChart data={monthly} />
           )}
@@ -251,13 +280,16 @@ export default function ReportesPage() {
       </div>
 
       {/* Trend line */}
-      <div className="bg-app-surface border border-app-border/60 rounded-xl p-4">
+      <div
+        className="bg-app-surface border border-app-border/40 rounded-2xl p-5 animate-fade-up"
+        style={{ animationDelay: '180ms', boxShadow: 'var(--app-shadow-md)' }}
+      >
         <div className="mb-4">
-          <h2 className="text-sm font-semibold text-app-text">Tendencia de gastos diarios</h2>
+          <h2 className="text-base font-bold text-app-text">Tendencia de gastos diarios</h2>
           <p className="text-xs text-app-text-subtle mt-0.5">Este mes</p>
         </div>
         {chartsLoading ? (
-          <Skeleton className="h-[260px] w-full bg-app-surface-alt rounded-lg" />
+          <Skeleton className="h-[260px] w-full bg-app-surface-alt rounded-xl" />
         ) : (
           <TrendLineChart data={daily} />
         )}

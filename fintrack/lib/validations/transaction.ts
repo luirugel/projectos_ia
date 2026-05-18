@@ -9,7 +9,7 @@ export const transactionSchema = z
     description: z.string().max(100).optional().nullable().transform(v => v === '' ? null : v),
     notes: z.string().max(500).optional().nullable().transform(v => v === '' ? null : v),
     date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida'),
-    tags: z.array(z.string()).max(10).optional().default([]),
+    tags: z.array(z.string().max(50)).max(10).optional().default([]),
     to_account_id: z.string().uuid().optional().nullable(),
     is_recurring: z.boolean().default(false),
     recurrence_rule: z.enum(['daily', 'weekly', 'monthly', 'yearly']).optional().nullable(),
