@@ -105,6 +105,17 @@ export function useGoals(): UseGoalsReturn {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'No autenticado' }
 
+    // Application-layer ownership check (DB-level RLS WITH CHECK is the
+    // authoritative guard — this is defence-in-depth: migration 003).
+    const { data: ownedGoal } = await supabase
+      .from('goals')
+      .select('id')
+      .eq('id', goalId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (!ownedGoal) return { error: 'Meta no encontrada.' }
+
     // current_amount + status are recomputed atomically by the
     // goal_contributions_recompute DB trigger (migration 002) — never
     // touched from the client to avoid lost updates / stale-cache races.

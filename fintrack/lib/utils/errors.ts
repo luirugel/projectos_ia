@@ -22,7 +22,7 @@ const MESSAGE_PATTERNS: Array<[RegExp, string]> = [
   [/duplicate key|already (registered|exists)/i, 'Ya existe un registro con esos datos.'],
   [/invalid login credentials/i, 'Correo o contraseña incorrectos.'],
   [/email not confirmed/i, 'Confirma tu correo antes de iniciar sesión.'],
-  [/user already registered/i, 'Ya existe una cuenta con ese correo.'],
+  [/user already registered/i, 'Ya existe un registro con esos datos.'],
   [/password should be at least/i, 'La contraseña es demasiado corta.'],
   [/jwt expired|invalid token|not authenticated/i, 'Tu sesión expiró. Inicia sesión de nuevo.'],
   [/row-level security|violates row-level/i, 'No tienes permiso para realizar esta acción.'],

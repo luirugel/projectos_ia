@@ -26,18 +26,23 @@ export async function signUp(formData: FormData) {
 
   const email = formData.get("email") as string
   const password = formData.get("password") as string
-  const full_name = formData.get("full_name") as string
+  const full_name = ((formData.get("full_name") as string) ?? "").trim().slice(0, 100)
 
   const { error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      data: { full_name },
+      data: { full_name: full_name || null },
       emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/auth/callback`,
     },
   })
 
   if (error) {
+    // Never confirm whether the email is already registered — return the
+    // same success message so attackers cannot enumerate valid accounts.
+    if (/user already registered/i.test(error.message)) {
+      return { success: "Revisa tu correo para confirmar tu cuenta." }
+    }
     return { error: toUserMessage(error) }
   }
 
@@ -81,7 +86,7 @@ export async function signInWithGoogle() {
 
 export async function signOut() {
   const supabase = await createClient()
-  await supabase.auth.signOut()
+  await supabase.auth.signOut({ scope: 'global' })
   revalidatePath("/", "layout")
   redirect("/login")
 }
