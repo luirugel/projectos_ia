@@ -209,27 +209,27 @@ export default function DashboardPage() {
           className={`lg:col-span-3 bg-app-surface rounded-2xl border border-app-border/40 shadow-sm overflow-hidden ${!reducedMotion ? 'transition-all duration-500 ease-out' : ''} ${!reducedMotion && !chartsVisible ? 'opacity-0 translate-y-4' : ''}`}
           style={!reducedMotion ? { transitionDelay: '0ms' } : undefined}
         >
-          <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-app-border/40">
+          <div className="flex items-center justify-between px-4 pt-3.5 pb-3 border-b border-app-border/40">
             <div>
               <h2 className="text-sm font-bold text-app-text">Flujo de caja</h2>
               <p className="text-xs text-app-text-subtle mt-0.5">Últimos 6 meses</p>
             </div>
-            <div className="flex items-center gap-4 text-xs text-app-text-subtle">
+            <div className="flex items-center gap-3 text-xs text-app-text-subtle">
               <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-income shrink-0" />
+                <span className="w-2 h-2 rounded-sm bg-income shrink-0" />
                 Ingresos
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-sm bg-expense/60 shrink-0" />
+                <span className="w-2 h-2 rounded-sm bg-expense/60 shrink-0" />
                 Gastos
               </span>
             </div>
           </div>
-          <div className="px-4 pt-4 pb-3">
+          <div className="px-3 pt-3 pb-2">
             {cashFlowLoading ? (
-              <Skeleton className="h-52 w-full bg-app-surface-alt rounded-xl" />
+              <Skeleton className="h-36 w-full bg-app-surface-alt rounded-xl" />
             ) : (
-              <ResponsiveContainer width="100%" height={208}>
+              <ResponsiveContainer width="100%" height={144}>
                 <BarChart data={cashFlow} barGap={3} barCategoryGap="36%">
                   <CartesianGrid strokeDasharray="3 3" stroke="rgb(var(--app-border) / 0.3)" vertical={false} />
                   <XAxis
@@ -240,7 +240,7 @@ export default function DashboardPage() {
                   <YAxis
                     tick={{ fill: 'rgb(var(--app-text-subtle))', fontSize: 10 }}
                     axisLine={false} tickLine={false}
-                    tickFormatter={fmtY} tickCount={5} domain={[0, 'auto']} width={48}
+                    tickFormatter={fmtY} tickCount={4} domain={[0, 'auto']} width={44}
                   />
                   <Tooltip content={<BarTooltip />} cursor={{ fill: 'rgb(var(--app-surface-alt) / 0.5)' }} />
                   <Bar dataKey="income" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={26}
