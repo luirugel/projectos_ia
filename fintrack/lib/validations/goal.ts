@@ -6,7 +6,7 @@ export const goalSchema = z.object({
   target_amount: z.number().positive('La meta debe ser positiva').max(999999999),
   current_amount: z.number().min(0).default(0),
   target_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable().transform(v => v === '' ? null : v),
-  icon: z.string().default('target'),
+  icon: z.string().regex(/^[a-z0-9-]+$/, 'Icono inválido').default('target'),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/).default('#10b981'),
 })
 

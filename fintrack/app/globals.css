@@ -181,4 +181,50 @@
     -moz-appearance: textfield;
     appearance: textfield;
   }
+
+  /* ── Progress bar shimmer — single pass after fill, not looping ── */
+  .bar-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .bar-shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.45) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: bar-shimmer-sweep 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.65s both;
+  }
+
+  /* ── Staggered card entrance ── */
+  .card-enter {
+    animation: card-enter 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .card-enter-1 { animation-delay: 0ms; }
+  .card-enter-2 { animation-delay: 70ms; }
+  .card-enter-3 { animation-delay: 140ms; }
+  .card-enter-4 { animation-delay: 210ms; }
+
+  /* ── Segmented control indicator ── */
+  .segment-indicator {
+    transition: left 150ms cubic-bezier(0.16, 1, 0.3, 1),
+                width 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+@layer base {
+  @keyframes bar-shimmer-sweep {
+    from { transform: translateX(-100%); }
+    to   { transform: translateX(100%); }
+  }
+
+  @keyframes card-enter {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 }

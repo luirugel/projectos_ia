@@ -14,12 +14,12 @@ function buildStore(): RateLimitStore {
   const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN
 
   if (process.env.NODE_ENV === 'production' && (!redisUrl || !redisToken)) {
-    // Loud warning: in-memory counters reset on cold-starts and are NOT shared
-    // across serverless instances. Set UPSTASH_REDIS_REST_URL and
-    // UPSTASH_REDIS_REST_TOKEN in Vercel env vars before going live.
-    console.error(
-      '[rateLimit] UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN not set. ' +
-      'Rate limiting is per-instance only and is NOT effective in serverless deployments.'
+    // Hard fail at startup: in-memory counters are NOT shared across serverless
+    // instances and reset on cold-starts, making rate limiting silently ineffective.
+    // Configure UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN in Vercel env vars.
+    throw new Error(
+      '[rateLimit] UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required ' +
+      'in production. Rate limiting cannot be shared across serverless instances without Redis.'
     )
   }
 

@@ -175,16 +175,39 @@ export default function DashboardPage() {
           {greeting()}{firstName ? `, ${firstName}` : ''}
         </h1>
         <div className="flex items-center gap-2">
-          <select
-            value={periodType}
-            onChange={(e) => setPeriodType(e.target.value as DashboardPeriod)}
-            className="h-9 rounded-xl border border-app-border bg-app-surface-alt text-app-text px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors"
+
+          {/* Segmented period control */}
+          <div
+            role="tablist"
             aria-label="Período"
+            className="relative flex items-center h-9 bg-app-surface-alt rounded-xl p-0.5 gap-0"
           >
+            {/* Sliding indicator */}
+            <span
+              aria-hidden="true"
+              className="segment-indicator absolute inset-y-0.5 rounded-[10px] bg-app-surface shadow-sm pointer-events-none"
+              style={{
+                left: `calc(${PERIODS.findIndex((p) => p.key === periodType) * 25}% + 2px)`,
+                width: 'calc(25% - 4px)',
+              }}
+            />
             {PERIODS.map(({ key, label }) => (
-              <option key={key} value={key}>{label}</option>
+              <button
+                key={key}
+                role="tab"
+                aria-selected={periodType === key}
+                onClick={() => setPeriodType(key)}
+                className={`relative z-10 flex-1 h-8 px-2.5 rounded-[10px] text-xs font-semibold transition-colors duration-150 min-w-[52px] ${
+                  periodType === key
+                    ? 'text-app-text'
+                    : 'text-app-text-subtle hover:text-app-text'
+                }`}
+              >
+                {label}
+              </button>
             ))}
-          </select>
+          </div>
+
           <button
             type="button"
             onClick={() => openTransactionModal()}

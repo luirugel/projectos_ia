@@ -33,9 +33,10 @@ export function RecentTransactions({ transactions, loading }: RecentTransactions
         </div>
         <Link
           href="/transactions"
-          className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors shrink-0 mt-0.5"
+          className="group flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors shrink-0 mt-0.5"
         >
-          Ver todas <ArrowRight className="h-3.5 w-3.5" />
+          Ver todas
+          <ArrowRight className="h-3.5 w-3.5 transition-transform duration-150 group-hover:translate-x-0.5" />
         </Link>
       </div>
 
@@ -66,13 +67,15 @@ export function RecentTransactions({ transactions, loading }: RecentTransactions
             <Link
               key={tx.id}
               href={`/transactions/${tx.id}`}
-              className="flex items-center gap-3 px-5 py-2.5 hover:bg-app-surface-alt/50 transition-colors duration-150 group"
+              className="group flex items-center gap-3 px-5 py-2.5 hover:bg-app-surface-alt/50 transition-colors duration-150"
             >
-              <CategoryIcon
-                icon={tx.category?.icon ?? (tx.type === 'income' ? 'plus-circle' : 'tag')}
-                color={tx.category?.color ?? (tx.type === 'income' ? '#10b981' : '#6366f1')}
-                size="sm"
-              />
+              <span className="shrink-0 transition-transform duration-150 ease-out group-hover:scale-110">
+                <CategoryIcon
+                  icon={tx.category?.icon ?? (tx.type === 'income' ? 'plus-circle' : 'tag')}
+                  color={tx.category?.color ?? (tx.type === 'income' ? '#10b981' : '#6366f1')}
+                  size="sm"
+                />
+              </span>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-app-text truncate leading-tight">
                   {tx.description ?? tx.category?.name ?? 'Sin descripción'}

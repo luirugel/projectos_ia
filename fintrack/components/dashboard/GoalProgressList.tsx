@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Target, CheckCircle2 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -11,13 +12,46 @@ interface GoalProgressListProps {
   loading: boolean
 }
 
+function useInViewOnce(threshold = 0.15): [React.RefObject<HTMLDivElement | null>, boolean] {
+  const ref = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect() } },
+      { threshold }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [threshold])
+  return [ref, visible]
+}
+
+function useReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduced(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setReduced(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+  return reduced
+}
+
 export function GoalProgressList({ goals, loading }: GoalProgressListProps) {
+  const [containerRef, visible] = useInViewOnce(0.1)
+  const reducedMotion = useReducedMotion()
+
   const activeGoals = goals.filter((g) => g.status === 'active')
   const totalCurrent = goals.reduce((s, g) => s + g.current_amount, 0)
   const totalTarget  = goals.reduce((s, g) => s + g.target_amount, 0)
 
+  const shouldAnimate = !reducedMotion && visible
+
   return (
-    <div className="bg-app-surface rounded-2xl border border-app-border/40 flex flex-col overflow-hidden shadow-sm">
+    <div ref={containerRef} className="bg-app-surface rounded-2xl border border-app-border/40 flex flex-col overflow-hidden shadow-sm">
       {/* Header */}
       <div className="flex items-start justify-between px-5 pt-4 pb-3 border-b border-app-border/40">
         <div>
@@ -30,9 +64,10 @@ export function GoalProgressList({ goals, loading }: GoalProgressListProps) {
         </div>
         <Link
           href="/goals"
-          className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors shrink-0 mt-0.5"
+          className="group flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors shrink-0 mt-0.5"
         >
-          Ver todas <ArrowRight className="h-3.5 w-3.5" />
+          Ver todas
+          <ArrowRight className="h-3.5 w-3.5 transition-transform duration-150 group-hover:translate-x-0.5" />
         </Link>
       </div>
 
@@ -61,18 +96,25 @@ export function GoalProgressList({ goals, loading }: GoalProgressListProps) {
             </Link>
           </div>
         ) : (
-          goals.slice(0, 3).map((goal) => {
+          goals.slice(0, 3).map((goal, i) => {
             const pct = goal.percentage ?? 0
+            const fillPct = Math.max(pct > 0 ? 2 : 0, Math.min(pct, 100))
             const color = goal.status === 'completed' ? '#10b981' : goal.color
             const isCompleted = goal.status === 'completed'
 
             return (
-              <div key={goal.id} className="px-5 py-3 space-y-2">
+              <div
+                key={goal.id}
+                className="px-5 py-3 space-y-2 hover:bg-app-surface-alt/40 transition-colors duration-150"
+              >
                 {/* Name row + percentage */}
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5 min-w-0">
                     {isCompleted && (
-                      <CheckCircle2 className="h-3.5 w-3.5 text-income shrink-0" aria-label="Meta completada" />
+                      <CheckCircle2
+                        className="h-3.5 w-3.5 text-income shrink-0 animate-scale-in"
+                        aria-label="Meta completada"
+                      />
                     )}
                     <p className="text-sm font-semibold text-app-text truncate">{goal.name}</p>
                   </div>
@@ -84,13 +126,16 @@ export function GoalProgressList({ goals, loading }: GoalProgressListProps) {
                   </span>
                 </div>
 
-                {/* Linear progress bar */}
+                {/* Progress bar — fills from 0 once in view */}
                 <div className="h-1.5 w-full rounded-full overflow-hidden bg-app-surface-alt">
                   <div
-                    className="h-full rounded-full transition-[width] duration-700 ease-out"
+                    className="h-full rounded-full bar-shimmer"
                     style={{
-                      width: `${Math.max(pct > 0 ? 2 : 0, Math.min(pct, 100))}%`,
                       backgroundColor: color,
+                      width: shouldAnimate ? `${fillPct}%` : '0%',
+                      transition: shouldAnimate
+                        ? `width 650ms cubic-bezier(0.16, 1, 0.3, 1) ${i * 70}ms`
+                        : 'none',
                     }}
                   />
                 </div>

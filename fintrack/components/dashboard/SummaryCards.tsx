@@ -1,9 +1,11 @@
 'use client'
 
+import { useEffect, useState, useRef } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { TrendingUp, TrendingDown, PiggyBank, Wallet, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react'
 import { AreaChart, Area, ResponsiveContainer } from 'recharts'
 import { Skeleton } from '@/components/ui/skeleton'
+import { GlossyIcon } from '@/components/shared/GlossyIcon'
 import { formatCurrency } from '@/lib/utils/currency'
 import type { DashboardSummary } from '@/types/database'
 
@@ -15,46 +17,46 @@ interface SummaryCardsProps {
 
 const SAVINGS_GOAL = 35
 
-// ── Icon badge ────────────────────────────────────────────────────────────────
+// ── Reduced-motion hook ────────────────────────────────────────────────────────
 
-type IconVariant = 'income' | 'expense' | 'primary' | 'savings'
-
-const VARIANT_CLS: Record<IconVariant, { bg: string; icon: string; ring: string }> = {
-  income:  { bg: 'bg-income/10',      icon: 'text-income',    ring: 'rgba(16,185,129,0.25)' },
-  expense: { bg: 'bg-expense/10',     icon: 'text-expense',   ring: 'rgba(239,68,68,0.25)' },
-  primary: { bg: 'bg-primary/10',     icon: 'text-primary',   ring: 'rgba(59,130,246,0.25)' },
-  savings: { bg: 'bg-amber-500/10',   icon: 'text-amber-500', ring: 'rgba(245,158,11,0.25)' },
+function useReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduced(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setReduced(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+  return reduced
 }
 
-function StatIcon({
-  icon: Icon,
-  variant,
-  size = 'md',
-  animKey,
-  delay = 0,
-}: {
-  icon: LucideIcon
-  variant: IconVariant
-  size?: 'sm' | 'md'
-  animKey?: string | number
-  delay?: number
-}) {
-  const { bg, icon: iconCls } = VARIANT_CLS[variant]
-  const containerCls = size === 'md'
-    ? 'h-9 w-9 rounded-xl'
-    : 'h-8 w-8 rounded-lg'
-  const iconCss = size === 'md' ? 'h-4 w-4' : 'h-3.5 w-3.5'
+// ── Count-up hook — numbers animate from 0 to target on data load ─────────────
 
-  return (
-    <span
-      key={animKey}
-      aria-hidden="true"
-      className={`inline-flex items-center justify-center shrink-0 ${containerCls} ${bg} animate-icon-pop group-hover:scale-110 transition-transform duration-200 ease-out`}
-      style={delay ? { animationDelay: `${delay}ms` } : undefined}
-    >
-      <Icon className={`${iconCss} ${iconCls}`} strokeWidth={2} />
-    </span>
-  )
+function useCountUp(target: number, trigger: boolean, reducedMotion: boolean, duration = 520): number {
+  const [val, setVal] = useState(0)
+  const rafRef = useRef<number>(0)
+
+  useEffect(() => {
+    cancelAnimationFrame(rafRef.current)
+    if (!trigger || reducedMotion || target === 0) {
+      setVal(target)
+      return
+    }
+    const start = performance.now()
+    const step = (now: number) => {
+      const t = Math.min((now - start) / duration, 1)
+      // ease-out-quart: 1 - (1 - t)^4
+      const eased = 1 - Math.pow(1 - t, 4)
+      setVal(target * eased)
+      if (t < 1) rafRef.current = requestAnimationFrame(step)
+      else setVal(target)
+    }
+    rafRef.current = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [target, trigger, reducedMotion, duration])
+
+  return val
 }
 
 // ── Sparkline ────────────────────────────────────────────────────────────────
@@ -109,23 +111,37 @@ function DeltaBadge({ current, prev }: { current: number; prev: number }) {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function SummaryCards({ summary, loading, periodLabel = 'período' }: SummaryCardsProps) {
+  const reducedMotion = useReducedMotion()
+  const loaded = !loading && summary !== null
+
+  const income   = summary?.total_income   ?? 0
+  const expenses = summary?.total_expenses ?? 0
+  const net      = income - expenses
+  const negative = net < 0
+  const savingsRate = income > 0 ? Math.max((net / income) * 100, 0) : null
+  const hasPrev  = (summary?.prev_income ?? 0) > 0 || (summary?.prev_expenses ?? 0) > 0
+  const prevNet  = (summary?.prev_income ?? 0) - (summary?.prev_expenses ?? 0)
+
+  const animatedNet      = useCountUp(Math.abs(net),      loaded, reducedMotion)
+  const animatedIncome   = useCountUp(income,              loaded, reducedMotion)
+  const animatedExpenses = useCountUp(expenses,            loaded, reducedMotion)
+  const animatedSavings  = useCountUp(savingsRate ?? 0,    loaded, reducedMotion)
+
   if (loading || !summary) {
     return (
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        {/* Hero skeleton */}
         <div className="col-span-2 bg-app-surface border border-app-border/40 rounded-2xl p-5 space-y-3">
           <div className="flex items-center gap-2.5">
-            <Skeleton className="h-9 w-9 rounded-xl bg-app-surface-alt" />
+            <Skeleton className="h-9 w-9 rounded-full bg-app-surface-alt" />
             <Skeleton className="h-3 w-24 bg-app-surface-alt" />
           </div>
           <Skeleton className="h-10 w-40 bg-app-surface-alt" />
           <Skeleton className="h-3 w-full bg-app-surface-alt" />
           <Skeleton className="h-3 w-28 bg-app-surface-alt" />
         </div>
-        {/* Secondary skeletons */}
         {Array.from({ length: 3 }).map((_, i) => (
           <div key={i} className="col-span-1 bg-app-surface border border-app-border/40 rounded-2xl p-4 space-y-2.5">
-            <Skeleton className="h-9 w-9 rounded-xl bg-app-surface-alt" />
+            <Skeleton className="h-9 w-9 rounded-full bg-app-surface-alt" />
             <Skeleton className="h-3 w-16 bg-app-surface-alt" />
             <Skeleton className="h-7 w-24 bg-app-surface-alt" />
             <Skeleton className="h-10 w-full bg-app-surface-alt rounded-lg mt-2" />
@@ -134,17 +150,6 @@ export function SummaryCards({ summary, loading, periodLabel = 'período' }: Sum
       </div>
     )
   }
-
-  const income   = summary.total_income ?? 0
-  const expenses = summary.total_expenses ?? 0
-  const net      = income - expenses
-  const negative = net < 0
-  const savingsRate = income > 0 ? Math.max((net / income) * 100, 0) : null
-  const hasPrev  = (summary.prev_income ?? 0) > 0 || (summary.prev_expenses ?? 0) > 0
-  const prevNet  = (summary.prev_income ?? 0) - (summary.prev_expenses ?? 0)
-
-  // animKey: changes when data loads so icons retrigger their pop animation
-  const animKey = `loaded-${income}-${expenses}`
 
   const heroBg = negative
     ? 'bg-expense/[0.04] border-expense/20'
@@ -164,17 +169,16 @@ export function SummaryCards({ summary, loading, periodLabel = 'período' }: Sum
     <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
 
       {/* ── Hero: Balance ── */}
-      <div className={`col-span-2 group rounded-2xl border p-5 shadow-sm flex flex-col justify-between ${heroBg}`}>
+      <div
+        className={`col-span-2 group rounded-2xl border p-5 shadow-sm flex flex-col justify-between card-enter card-enter-1 ${heroBg}`}
+      >
         <div>
-          {/* Icon + label row */}
           <div className="flex items-center justify-between gap-2 mb-4">
             <div className="flex items-center gap-2.5">
-              <StatIcon
+              <GlossyIcon
                 icon={Wallet}
-                variant="primary"
-                size="md"
-                animKey={animKey}
-                delay={0}
+                color="#3b82f6"
+                size="sm"
               />
               <span className="text-xs font-semibold uppercase tracking-wider text-app-text-subtle">
                 Balance del {periodLabel}
@@ -187,7 +191,7 @@ export function SummaryCards({ summary, loading, periodLabel = 'período' }: Sum
             className={`text-4xl lg:text-5xl font-black tabular-nums font-mono leading-none tracking-tight ${heroNumColor}`}
             aria-label={`Balance: ${negative ? 'menos ' : ''}${formatCurrency(Math.abs(net))}`}
           >
-            {negative ? '−' : ''}{formatCurrency(Math.abs(net))}
+            {negative ? '−' : ''}{formatCurrency(animatedNet)}
           </p>
 
           <p className="text-sm text-app-text-subtle mt-3 leading-snug">
@@ -206,97 +210,67 @@ export function SummaryCards({ summary, loading, periodLabel = 'período' }: Sum
       </div>
 
       {/* ── Income ── */}
-      <div className="col-span-1 group bg-app-surface rounded-2xl border border-app-border/40 shadow-sm flex flex-col overflow-hidden">
+      <div className="col-span-1 group bg-app-surface rounded-2xl border border-app-border/40 shadow-sm flex flex-col overflow-hidden card-enter card-enter-2">
         <div className="px-4 pt-4 pb-0 flex-1">
-          {/* Icon row */}
           <div className="flex items-start justify-between mb-3">
-            <StatIcon
-              icon={TrendingUp}
-              variant="income"
-              size="md"
-              animKey={animKey}
-              delay={60}
-            />
+            <GlossyIcon icon={TrendingUp} color="#10b981" size="sm" />
             {hasPrev && <DeltaBadge current={income} prev={summary.prev_income ?? 0} />}
           </div>
 
           <p className="text-xs font-semibold uppercase tracking-wider text-app-text-subtle mb-1.5">
             Ingresos
           </p>
-
           <p className="text-2xl font-bold tabular-nums font-mono leading-none text-income">
-            {formatCurrency(income)}
+            {formatCurrency(animatedIncome)}
           </p>
-
           <p className="text-xs text-app-text-subtle mt-1.5 tabular-nums">
             {hasPrev ? `antes ${formatCurrency(summary.prev_income ?? 0)}` : `este ${periodLabel}`}
           </p>
         </div>
-
-        {/* Sparkline flush to card bottom */}
         <div className="mt-2 -mx-px">
           <Sparkline data={summary.daily_income ?? []} color="#10b981" />
         </div>
       </div>
 
       {/* ── Expenses ── */}
-      <div className="col-span-1 group bg-app-surface rounded-2xl border border-app-border/40 shadow-sm flex flex-col overflow-hidden">
+      <div className="col-span-1 group bg-app-surface rounded-2xl border border-app-border/40 shadow-sm flex flex-col overflow-hidden card-enter card-enter-3">
         <div className="px-4 pt-4 pb-0 flex-1">
-          {/* Icon row */}
           <div className="flex items-start justify-between mb-3">
-            <StatIcon
-              icon={TrendingDown}
-              variant="expense"
-              size="md"
-              animKey={animKey}
-              delay={120}
-            />
+            <GlossyIcon icon={TrendingDown} color="#ef4444" size="sm" />
             {hasPrev && <DeltaBadge current={expenses} prev={summary.prev_expenses ?? 0} />}
           </div>
 
           <p className="text-xs font-semibold uppercase tracking-wider text-app-text-subtle mb-1.5">
             Gastos
           </p>
-
           <p className="text-2xl font-bold tabular-nums font-mono leading-none text-expense">
-            {formatCurrency(expenses)}
+            {formatCurrency(animatedExpenses)}
           </p>
-
           <p className="text-xs text-app-text-subtle mt-1.5 tabular-nums">
             {hasPrev ? `antes ${formatCurrency(summary.prev_expenses ?? 0)}` : `este ${periodLabel}`}
           </p>
         </div>
-
         <div className="mt-2 -mx-px">
           <Sparkline data={summary.daily_expense ?? []} color="#ef4444" />
         </div>
       </div>
 
       {/* ── Savings Rate ── */}
-      <div className="col-span-2 lg:col-span-1 group bg-app-surface rounded-2xl border border-app-border/40 shadow-sm flex flex-col overflow-hidden">
+      <div className="col-span-2 lg:col-span-1 group bg-app-surface rounded-2xl border border-app-border/40 shadow-sm flex flex-col overflow-hidden card-enter card-enter-4">
         <div className="px-4 pt-4 pb-4 flex-1 flex flex-col justify-between">
           <div>
-            {/* Icon row */}
             <div className="mb-3">
-              <StatIcon
-                icon={PiggyBank}
-                variant="savings"
-                size="md"
-                animKey={animKey}
-                delay={180}
-              />
+              <GlossyIcon icon={PiggyBank} color="#f59e0b" size="sm" />
             </div>
 
             <p className="text-xs font-semibold uppercase tracking-wider text-app-text-subtle mb-1.5">
               Tasa de ahorro
             </p>
-
             <p className={`text-2xl font-bold tabular-nums font-mono leading-none ${
               savingsRate !== null && savingsRate >= SAVINGS_GOAL ? 'text-income' : 'text-app-text'
             }`}>
-              {savingsRate === null ? '—' : `${savingsRate.toFixed(1)}%`}
+              {savingsRate === null ? '—' : `${animatedSavings.toFixed(1)}%`}
             </p>
-
             <p className="text-xs text-app-text-subtle mt-1.5">
               {savingsRate === null
                 ? 'Registra ingresos'
@@ -306,7 +280,6 @@ export function SummaryCards({ summary, loading, periodLabel = 'período' }: Sum
             </p>
           </div>
 
-          {/* Progress bar */}
           <div className="mt-4">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[10px] text-app-text-subtle/70 font-medium">0%</span>

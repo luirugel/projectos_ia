@@ -6,7 +6,11 @@ import { Button } from '@/components/ui/button'
 
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    console.error(error)
+    if (process.env.NODE_ENV === 'production') {
+      console.error('[Global error] digest:', error.digest)
+    } else {
+      console.error(error)
+    }
   }, [error])
 
   return (
