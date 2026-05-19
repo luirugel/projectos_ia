@@ -46,7 +46,11 @@ export default function RegisterPage() {
   function handleGoogle() {
     startGoogleTransition(async () => {
       const result = await signInWithGoogle()
-      if (result?.error) setError(result.error)
+      if (result?.error) {
+        setError(result.error)
+      } else if (result?.url) {
+        window.location.href = result.url
+      }
     })
   }
 

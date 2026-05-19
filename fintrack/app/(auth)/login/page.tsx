@@ -17,12 +17,21 @@ export default function LoginPage() {
   const [isGooglePending, startGoogleTransition] = useTransition()
 
   // Surface OAuth / callback failures the auth/callback route forwards here
-  // as ?error=... (otherwise a failed Google sign-in is a silent dead-end).
+  // as ?error=... Mapped to a fixed allowlist so arbitrary URL-crafted text
+  // cannot be displayed as an official system message (content injection).
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const err = params.get("error")
     if (err) {
-      setError(err)
+      const ALLOWED: Record<string, string> = {
+        'Inicio de sesión cancelado.': 'Inicio de sesión cancelado.',
+        'Este método de inicio de sesión no está disponible.': 'Este método de inicio de sesión no está disponible.',
+        'Error del servidor. Intenta de nuevo.': 'Error del servidor. Intenta de nuevo.',
+        'Servicio temporalmente no disponible.': 'Servicio temporalmente no disponible.',
+        'No se pudo iniciar sesión.': 'No se pudo iniciar sesión.',
+        'No se pudo completar el inicio de sesión. Intenta de nuevo.': 'No se pudo completar el inicio de sesión. Intenta de nuevo.',
+      }
+      setError(ALLOWED[err] ?? 'Ocurrió un error al iniciar sesión. Intenta de nuevo.')
       const url = new URL(window.location.href)
       url.searchParams.delete("error")
       window.history.replaceState({}, "", url)
@@ -42,7 +51,14 @@ export default function LoginPage() {
   function handleGoogle() {
     startGoogleTransition(async () => {
       const result = await signInWithGoogle()
-      if (result?.error) setError(result.error)
+      if (result?.error) {
+        setError(result.error)
+      } else if (result?.url) {
+        // Full browser navigation preserves the PKCE code-verifier cookie
+        // set by @supabase/ssr during signInWithOAuth. Using router.push()
+        // or Next.js redirect() can lose that cookie in some runtimes.
+        window.location.href = result.url
+      }
     })
   }
 
