@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Label,
 } from 'recharts'
-import { Plus } from 'lucide-react'
+import { Plus, BarChart2 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { createClient } from '@/lib/supabase/client'
 import { useDashboardSummary } from '@/lib/hooks/useDashboardSummary'
@@ -36,6 +36,34 @@ const PERIODS: { key: DashboardPeriod; label: string }[] = [
   { key: 'quarter', label: 'Trimestre' },
   { key: 'year',    label: 'Año' },
 ]
+
+function useReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduced(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setReduced(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+  return reduced
+}
+
+function useInView(threshold = 0.15): [React.RefObject<HTMLDivElement | null>, boolean] {
+  const ref = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect() } },
+      { threshold }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [threshold])
+  return [ref, visible]
+}
 
 function greeting(): string {
   const h = new Date().getHours()
@@ -87,6 +115,8 @@ export default function DashboardPage() {
   const [firstName, setFirstName] = useState<string>('')
   const [cashFlow, setCashFlow] = useState<Array<{ month: string; income: number; expenses: number }>>([])
   const [cashFlowLoading, setCashFlowLoading] = useState(true)
+  const reducedMotion = useReducedMotion()
+  const [chartsRef, chartsVisible] = useInView(0.1)
 
   useEffect(() => {
     const supabase = createClient()
@@ -172,10 +202,13 @@ export default function DashboardPage() {
       <SummaryCards summary={summary} loading={summaryLoading} periodLabel={periodWord[periodType]} />
 
       {/* ── Charts row (bar + donut) ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+      <div ref={chartsRef} className="grid grid-cols-1 lg:grid-cols-5 gap-4">
 
         {/* Cash-flow bar chart */}
-        <div className="lg:col-span-3 bg-app-surface rounded-2xl border border-app-border/40 shadow-sm overflow-hidden">
+        <div
+          className={`lg:col-span-3 bg-app-surface rounded-2xl border border-app-border/40 shadow-sm overflow-hidden ${!reducedMotion ? 'transition-all duration-500 ease-out' : ''} ${!reducedMotion && !chartsVisible ? 'opacity-0 translate-y-4' : ''}`}
+          style={!reducedMotion ? { transitionDelay: '0ms' } : undefined}
+        >
           <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-app-border/40">
             <div>
               <h2 className="text-sm font-bold text-app-text">Flujo de caja</h2>
@@ -211,10 +244,12 @@ export default function DashboardPage() {
                   />
                   <Tooltip content={<BarTooltip />} cursor={{ fill: 'rgb(var(--app-surface-alt) / 0.5)' }} />
                   <Bar dataKey="income" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={26}
-                    isAnimationActive animationDuration={600} animationEasing="ease-out" />
+                    isAnimationActive={!reducedMotion && chartsVisible}
+                    animationDuration={500} animationEasing="ease-out" animationBegin={0} />
                   <Bar dataKey="expenses" fill="#ef444466" stroke="#ef4444" strokeWidth={1}
                     radius={[4, 4, 0, 0]} maxBarSize={26}
-                    isAnimationActive animationDuration={600} animationEasing="ease-out" animationBegin={100} />
+                    isAnimationActive={!reducedMotion && chartsVisible}
+                    animationDuration={500} animationEasing="ease-out" animationBegin={120} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -222,7 +257,10 @@ export default function DashboardPage() {
         </div>
 
         {/* Expenses by category donut */}
-        <div className="lg:col-span-2 bg-app-surface rounded-2xl border border-app-border/40 shadow-sm overflow-hidden">
+        <div
+          className={`lg:col-span-2 bg-app-surface rounded-2xl border border-app-border/40 shadow-sm overflow-hidden ${!reducedMotion ? 'transition-all duration-500 ease-out' : ''} ${!reducedMotion && !chartsVisible ? 'opacity-0 translate-y-4' : ''}`}
+          style={!reducedMotion ? { transitionDelay: '80ms' } : undefined}
+        >
           <div className="px-5 pt-4 pb-3 border-b border-app-border/40">
             <h2 className="text-sm font-bold text-app-text">Gastos por categoría</h2>
             <p className="text-xs text-app-text-subtle mt-0.5">{currentPeriodLabel} actual</p>
@@ -242,7 +280,7 @@ export default function DashboardPage() {
             ) : pieData.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-2 h-64 text-center">
                 <div className="w-16 h-16 rounded-full bg-app-surface-alt flex items-center justify-center">
-                  <span className="text-2xl">📊</span>
+                  <BarChart2 className="h-7 w-7 text-app-text-subtle/50" strokeWidth={1.5} />
                 </div>
                 <p className="text-sm font-medium text-app-text-subtle">Sin gastos registrados</p>
                 <p className="text-xs text-app-text-subtle/70">Registra un gasto para ver la distribución</p>
@@ -260,9 +298,10 @@ export default function DashboardPage() {
                       dataKey="value"
                       stroke="none"
                       cornerRadius={4}
-                      isAnimationActive
-                      animationDuration={700}
+                      isAnimationActive={!reducedMotion && chartsVisible}
+                      animationDuration={650}
                       animationEasing="ease-out"
+                      animationBegin={60}
                     >
                       {pieData.map((entry, i) => (
                         <Cell key={i} fill={entry.color} opacity={0.92} />
@@ -297,10 +336,14 @@ export default function DashboardPage() {
                   </PieChart>
                 </ResponsiveContainer>
 
-                {/* Category legend */}
+                {/* Category legend — staggered fade-in */}
                 <div className="space-y-2 mt-1">
                   {pieData.map((item, i) => (
-                    <div key={i} className="flex items-center gap-2.5">
+                    <div
+                      key={i}
+                      className={`flex items-center gap-2.5 ${!reducedMotion ? 'transition-all duration-300 ease-out' : ''} ${!reducedMotion && !chartsVisible ? 'opacity-0 -translate-x-2' : ''}`}
+                      style={!reducedMotion ? { transitionDelay: `${200 + i * 40}ms` } : undefined}
+                    >
                       <CategoryIcon icon={item.icon} color={item.color} size="sm" />
                       <span className="text-xs text-app-text truncate flex-1">{item.name}</span>
                       <span className="text-xs tabular-nums font-mono font-semibold text-app-text shrink-0">
