@@ -20,20 +20,16 @@ function daysUntilReset(period: 'weekly' | 'monthly' | 'yearly'): number {
   return Math.max(0, differenceInDays(endOfMonth(now), now))
 }
 
-type Status = 'exceeded' | 'warning' | 'attention' | 'healthy'
-
-function getStatus(pct: number): Status {
-  if (pct >= 100) return 'exceeded'
-  if (pct >= 80)  return 'warning'
-  if (pct >= 60)  return 'attention'
-  return 'healthy'
+function barColor(pct: number): string {
+  if (pct >= 100) return 'bg-expense'
+  if (pct >= 80)  return 'bg-amber-400'
+  return 'bg-primary'
 }
 
-const statusConfig: Record<Status, { label: string; badge: string; bar: string; barBg: string }> = {
-  exceeded:  { label: 'Excedido',  badge: 'bg-expense/10 text-expense',             bar: 'bg-expense',      barBg: 'bg-expense/10' },
-  warning:   { label: 'Alerta',    badge: 'bg-orange-400/10 text-orange-500',        bar: 'bg-orange-400',   barBg: 'bg-orange-400/10' },
-  attention: { label: 'Cerca',     badge: 'bg-yellow-400/10 text-yellow-600 dark:text-yellow-400', bar: 'bg-yellow-400', barBg: 'bg-yellow-400/10' },
-  healthy:   { label: 'OK',        badge: 'bg-income/10 text-income',               bar: 'bg-income',       barBg: 'bg-income/8' },
+function pctColor(pct: number): string {
+  if (pct >= 100) return 'text-expense'
+  if (pct >= 80)  return 'text-amber-500'
+  return 'text-app-text-subtle'
 }
 
 export function BudgetProgressList({ budgets, loading }: BudgetProgressListProps) {
@@ -42,20 +38,17 @@ export function BudgetProgressList({ budgets, loading }: BudgetProgressListProps
   const displayList = (alertBudgets.length > 0 ? alertBudgets : budgets).slice(0, 5)
 
   return (
-    <div
-      className="bg-app-surface rounded-2xl border border-app-border/40 flex flex-col overflow-hidden"
-      style={{ boxShadow: 'var(--app-shadow-md)' }}
-    >
+    <div className="bg-app-surface rounded-2xl border border-app-border/40 flex flex-col overflow-hidden shadow-sm">
       {/* Header */}
-      <div className="flex items-start justify-between px-5 pt-5 pb-3 border-b border-app-border/40">
+      <div className="flex items-start justify-between px-5 pt-4 pb-3 border-b border-app-border/40">
         <div>
-          <h2 className="text-base font-bold text-app-text">Alertas de presupuesto</h2>
+          <h2 className="text-base font-bold text-app-text">Presupuestos</h2>
           <p className="text-xs text-app-text-subtle mt-0.5">
             {loading
               ? '—'
               : alertCount > 0
-              ? `${alertCount} de ${budgets.length} categorías cerca del límite`
-              : 'Todos los presupuestos bajo control'}
+              ? `${alertCount} de ${budgets.length} cerca del límite`
+              : 'Todos bajo control'}
           </p>
         </div>
         <Link
@@ -70,44 +63,42 @@ export function BudgetProgressList({ budgets, loading }: BudgetProgressListProps
       <div className="flex-1 divide-y divide-app-border/30">
         {loading ? (
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="px-5 py-3.5 space-y-2">
+            <div key={i} className="px-5 py-3 space-y-2">
               <div className="flex items-center gap-2">
-                <Skeleton className="h-7 w-7 rounded-full bg-app-surface-alt shrink-0" />
+                <Skeleton className="h-6 w-6 rounded-full bg-app-surface-alt shrink-0" />
                 <Skeleton className="h-3.5 w-24 bg-app-surface-alt" />
-                <Skeleton className="h-3.5 w-20 bg-app-surface-alt ml-auto" />
+                <Skeleton className="h-3.5 w-10 bg-app-surface-alt ml-auto" />
               </div>
-              <Skeleton className="h-2 w-full bg-app-surface-alt rounded-full" />
+              <Skeleton className="h-1.5 w-full bg-app-surface-alt rounded-full" />
             </div>
           ))
         ) : budgets.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 py-10 px-4">
-            <ShieldCheck className="h-8 w-8 text-app-text-subtle/40" strokeWidth={1.5} />
-            <p className="text-sm text-app-text-subtle text-center">Sin presupuestos creados</p>
+          <div className="flex flex-col items-center justify-center gap-2 py-8 px-4">
+            <ShieldCheck className="h-7 w-7 text-app-text-subtle/40" strokeWidth={1.5} />
+            <p className="text-sm text-app-text-subtle text-center">Sin presupuestos</p>
             <p className="text-xs text-app-text-subtle/70 text-center">Crea uno para controlar tus gastos</p>
           </div>
         ) : (
           displayList.map((budget) => {
             const pct = budget.percentage ?? 0
-            const status = getStatus(pct)
-            const cfg = statusConfig[status]
             const fillPct = Math.min(pct, 100)
             const available = budget.amount_limit - (budget.spent ?? 0)
             const resetDays = daysUntilReset(budget.period)
 
             return (
-              <div key={budget.id} className="px-5 py-3.5 space-y-2.5">
+              <div key={budget.id} className="px-5 py-3 space-y-2">
                 <div className="flex items-center gap-2.5">
                   <CategoryIcon icon={budget.category?.icon ?? 'tag'} color={budget.category?.color} size="sm" />
                   <span className="text-sm font-semibold text-app-text flex-1 truncate">{budget.category?.name}</span>
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${cfg.badge}`}>
+                  <span className={`text-xs font-bold tabular-nums font-mono ${pctColor(pct)}`}>
                     {pct.toFixed(0)}%
                   </span>
                 </div>
 
                 {/* Progress bar */}
-                <div className={`h-1.5 w-full rounded-full overflow-hidden ${cfg.barBg}`}>
+                <div className="h-1.5 w-full rounded-full overflow-hidden bg-app-surface-alt">
                   <div
-                    className={`h-full rounded-full transition-[width] duration-700 ease-out ${cfg.bar}`}
+                    className={`h-full rounded-full transition-[width] duration-700 ease-out ${barColor(pct)}`}
                     style={{ width: `${Math.max(fillPct, fillPct > 0 ? 2 : 0)}%` }}
                   />
                 </div>
@@ -116,8 +107,8 @@ export function BudgetProgressList({ budgets, loading }: BudgetProgressListProps
                   <span className="text-xs text-app-text-subtle tabular-nums">
                     {formatCurrency(budget.spent ?? 0)} / {formatCurrency(budget.amount_limit)}
                   </span>
-                  <span className="text-xs text-app-text-subtle font-medium">
-                    {status === 'exceeded'
+                  <span className="text-xs text-app-text-subtle">
+                    {pct >= 100
                       ? `Reinicia en ${resetDays}d`
                       : `${formatCurrency(Math.max(available, 0))} libres`}
                   </span>

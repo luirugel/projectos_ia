@@ -1,7 +1,10 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Label } from 'recharts'
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Label,
+} from 'recharts'
 import { Plus } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { createClient } from '@/lib/supabase/client'
@@ -14,13 +17,10 @@ import { RecentTransactions } from '@/components/dashboard/RecentTransactions'
 import { BudgetProgressList } from '@/components/dashboard/BudgetProgressList'
 import { GoalProgressList } from '@/components/dashboard/GoalProgressList'
 import { TransactionFormModal } from '@/components/transactions/TransactionFormModal'
-import { MomentumStreak } from '@/components/dashboard/MomentumStreak'
-import { ActivationCard } from '@/components/dashboard/ActivationCard'
-import { useNavCounts } from '@/lib/hooks/useNavCounts'
 import { useUIStore } from '@/lib/stores/uiStore'
 import { CategoryIcon } from '@/components/shared/CategoryIcon'
 import { formatCurrency } from '@/lib/utils/currency'
-import { formatDateLong, getLast6Months, getCurrentMonthRange } from '@/lib/utils/dates'
+import { getLast6Months, getCurrentMonthRange } from '@/lib/utils/dates'
 import type { DashboardPeriod } from '@/types/database'
 
 function fmtY(v: number): string {
@@ -44,29 +44,36 @@ function greeting(): string {
   return 'Buenas noches'
 }
 
-function BarTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) {
+function BarTooltip({ active, payload, label }: {
+  active?: boolean
+  payload?: Array<{ name: string; value: number; color: string }>
+  label?: string
+}) {
   if (!active || !payload?.length) return null
   return (
-    <div className="bg-app-surface border border-app-border/60 rounded-lg px-3 py-2.5 shadow-lg text-sm">
+    <div className="bg-app-surface border border-app-border/60 rounded-xl px-3 py-2.5 shadow-lg text-sm">
       <p className="text-app-text-subtle text-xs mb-2 capitalize font-medium">{label}</p>
       {payload.map((p) => (
-        <div key={p.name} className="flex items-center gap-2 mb-0.5 last:mb-0">
+        <div key={p.name} className="flex items-center gap-2 mb-1 last:mb-0">
           <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
-          <span className="text-app-text-muted">{p.name === 'income' ? 'Ingresos' : 'Gastos'}:</span>
-          <span className="text-app-text font-semibold tabular-nums">{formatCurrency(p.value)}</span>
+          <span className="text-app-text-muted text-xs">{p.name === 'income' ? 'Ingresos' : 'Gastos'}:</span>
+          <span className="text-app-text font-semibold tabular-nums font-mono">{formatCurrency(p.value)}</span>
         </div>
       ))}
     </div>
   )
 }
 
-function PieTooltip({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number; payload: { color: string } }> }) {
+function PieTooltip({ active, payload }: {
+  active?: boolean
+  payload?: Array<{ name: string; value: number }>
+}) {
   if (!active || !payload?.length) return null
   const item = payload[0]
   return (
-    <div className="bg-app-surface border border-app-border/60 rounded-lg px-3 py-2 shadow-lg text-sm">
+    <div className="bg-app-surface border border-app-border/60 rounded-xl px-3 py-2 shadow-lg text-sm">
       <p className="text-app-text font-semibold">{item.name}</p>
-      <p className="text-app-text-muted tabular-nums">{formatCurrency(item.value)}</p>
+      <p className="text-app-text-muted tabular-nums font-mono">{formatCurrency(item.value)}</p>
     </div>
   )
 }
@@ -76,13 +83,10 @@ export default function DashboardPage() {
   const { transactions, loading: txLoading, refresh: refreshTx } = useTransactions(getCurrentMonthRange())
   const { budgets, loading: budgetsLoading, refresh: refreshBudgets } = useBudgets()
   const { goals, loading: goalsLoading } = useGoals()
-  const { accounts: accountCount, transactions: txCount, goals: goalCount, loading: countsLoading, refresh: refreshCounts } = useNavCounts()
   const { openTransactionModal } = useUIStore()
   const [firstName, setFirstName] = useState<string>('')
   const [cashFlow, setCashFlow] = useState<Array<{ month: string; income: number; expenses: number }>>([])
   const [cashFlowLoading, setCashFlowLoading] = useState(true)
-
-  const today = formatDateLong(new Date().toISOString().split('T')[0])
 
   useEffect(() => {
     const supabase = createClient()
@@ -96,7 +100,6 @@ export default function DashboardPage() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setCashFlowLoading(false); return }
-
     const months = getLast6Months()
     const results = await Promise.all(
       months.map(async ({ label, start, end }) => {
@@ -117,47 +120,41 @@ export default function DashboardPage() {
 
   useEffect(() => { fetchCashFlow() }, [fetchCashFlow])
 
-  const periodWord: Record<DashboardPeriod, string> = { week: 'semana', month: 'mes', quarter: 'trimestre', year: 'año' }
+  const periodWord: Record<DashboardPeriod, string> = {
+    week: 'semana', month: 'mes', quarter: 'trimestre', year: 'año',
+  }
 
   const pieData = (summary?.by_category ?? [])
     .slice(0, 6)
-    .map((c) => ({ name: c.category.name, icon: c.category.icon, value: c.total, color: c.category.color, pct: c.percentage }))
+    .map((c) => ({
+      name: c.category.name,
+      icon: c.category.icon,
+      value: c.total,
+      color: c.category.color,
+      pct: c.percentage,
+    }))
+
+  const currentPeriodLabel = PERIODS.find((p) => p.key === periodType)?.label ?? 'Mes'
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-5 pb-8 animate-fade-up">
 
       {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 animate-fade-up">
-        <div>
-          <h1 className="text-3xl font-black text-app-text tracking-tight leading-tight">
-            {greeting()}{firstName ? `, ${firstName}.` : '.'}
-          </h1>
-          <span className="inline-flex items-center text-xs text-app-text-subtle bg-app-surface border border-app-border/40 px-2.5 py-1 rounded-full mt-2 capitalize"
-            style={{ boxShadow: 'var(--app-shadow-card)' }}>
-            {today}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          {/* Period selector */}
-          <div className="flex items-center bg-app-surface border border-app-border/40 rounded-xl p-1 gap-0.5"
-            style={{ boxShadow: 'var(--app-shadow-card)' }}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h1 className="text-2xl font-bold text-app-text tracking-tight">
+          {greeting()}{firstName ? `, ${firstName}` : ''}
+        </h1>
+        <div className="flex items-center gap-2">
+          <select
+            value={periodType}
+            onChange={(e) => setPeriodType(e.target.value as DashboardPeriod)}
+            className="h-9 rounded-xl border border-app-border bg-app-surface-alt text-app-text px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-colors"
+            aria-label="Período"
+          >
             {PERIODS.map(({ key, label }) => (
-              <button
-                key={key}
-                onClick={() => setPeriodType(key)}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-150 ${
-                  periodType === key
-                    ? 'bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-900'
-                    : 'text-app-text-subtle hover:text-app-text hover:bg-app-surface-alt'
-                }`}
-              >
-                {label}
-              </button>
+              <option key={key} value={key}>{label}</option>
             ))}
-          </div>
-
-          {/* Primary CTA */}
+          </select>
           <button
             type="button"
             onClick={() => openTransactionModal()}
@@ -171,135 +168,104 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Habit engine ── */}
-      {!countsLoading && (
-        accountCount > 0 && txCount > 0 ? (
-          <MomentumStreak />
-        ) : (
-          <ActivationCard
-            accounts={accountCount}
-            transactions={txCount}
-            goals={goalCount}
-            onLogTransaction={() => openTransactionModal()}
-          />
-        )
-      )}
+      {/* ── KPI stat row ── */}
+      <SummaryCards summary={summary} loading={summaryLoading} periodLabel={periodWord[periodType]} />
 
-      {/* ── Summary cards ── */}
-      <div className="animate-fade-up" style={{ animationDelay: '60ms' }}>
-        <SummaryCards summary={summary} loading={summaryLoading} periodLabel={periodWord[periodType]} />
-      </div>
+      {/* ── Charts row (bar + donut) ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
 
-      {/* ── Charts ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 animate-fade-up" style={{ animationDelay: '120ms' }}>
-
-        {/* Cash flow bar chart */}
-        <div
-          className="lg:col-span-3 bg-app-surface rounded-2xl border border-app-border/40 overflow-hidden"
-          style={{ boxShadow: 'var(--app-shadow-md)' }}
-        >
-          <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-app-border/40">
+        {/* Cash-flow bar chart */}
+        <div className="lg:col-span-3 bg-app-surface rounded-2xl border border-app-border/40 shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-app-border/40">
             <div>
-              <h2 className="text-base font-bold text-app-text">Flujo de caja</h2>
+              <h2 className="text-sm font-bold text-app-text">Flujo de caja</h2>
               <p className="text-xs text-app-text-subtle mt-0.5">Últimos 6 meses</p>
             </div>
             <div className="flex items-center gap-4 text-xs text-app-text-subtle">
               <span className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-sm bg-income inline-block shrink-0" />
+                <span className="w-2.5 h-2.5 rounded-sm bg-income shrink-0" />
                 Ingresos
               </span>
               <span className="flex items-center gap-1.5">
-                <span
-                  className="w-3 h-3 rounded-sm inline-block shrink-0"
-                  style={{
-                    backgroundImage: 'repeating-linear-gradient(45deg,#ef444488,#ef444488 2px,transparent 2px,transparent 6px)',
-                    border: '1px solid #ef4444',
-                  }}
-                />
+                <span className="w-2.5 h-2.5 rounded-sm bg-expense/60 shrink-0" />
                 Gastos
               </span>
             </div>
           </div>
-          <div className="px-4 py-5">
+          <div className="px-4 pt-4 pb-3">
             {cashFlowLoading ? (
-              <Skeleton className="h-56 w-full bg-app-surface-alt rounded-xl" />
+              <Skeleton className="h-52 w-full bg-app-surface-alt rounded-xl" />
             ) : (
-              <ResponsiveContainer width="100%" height={224}>
-                <BarChart data={cashFlow} barGap={4} barCategoryGap="38%">
-                  <defs>
-                    <pattern id="expenseHatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
-                      <rect width="6" height="6" fill="#ef4444" />
-                      <line x1="0" y1="0" x2="0" y2="6" stroke="rgba(255,255,255,0.55)" strokeWidth="3" />
-                    </pattern>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgb(var(--app-border) / 0.35)" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fill: 'rgb(var(--app-text-subtle))', fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: 'rgb(var(--app-text-subtle))', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={fmtY} tickCount={5} domain={[0, 'auto']} width={52} />
-                  <Tooltip content={<BarTooltip />} cursor={{ fill: 'rgb(var(--app-surface-alt) / 0.4)' }} />
-                  <Bar dataKey="income" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={30}
-                    isAnimationActive animationDuration={700} animationEasing="ease-out" />
-                  <Bar dataKey="expenses" fill="url(#expenseHatch)" stroke="#ef4444" strokeWidth={1}
-                    radius={[4, 4, 0, 0]} maxBarSize={30}
-                    isAnimationActive animationDuration={700} animationEasing="ease-out" animationBegin={120} />
+              <ResponsiveContainer width="100%" height={208}>
+                <BarChart data={cashFlow} barGap={3} barCategoryGap="36%">
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgb(var(--app-border) / 0.3)" vertical={false} />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fill: 'rgb(var(--app-text-subtle))', fontSize: 11 }}
+                    axisLine={false} tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fill: 'rgb(var(--app-text-subtle))', fontSize: 10 }}
+                    axisLine={false} tickLine={false}
+                    tickFormatter={fmtY} tickCount={5} domain={[0, 'auto']} width={48}
+                  />
+                  <Tooltip content={<BarTooltip />} cursor={{ fill: 'rgb(var(--app-surface-alt) / 0.5)' }} />
+                  <Bar dataKey="income" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={26}
+                    isAnimationActive animationDuration={600} animationEasing="ease-out" />
+                  <Bar dataKey="expenses" fill="#ef444466" stroke="#ef4444" strokeWidth={1}
+                    radius={[4, 4, 0, 0]} maxBarSize={26}
+                    isAnimationActive animationDuration={600} animationEasing="ease-out" animationBegin={100} />
                 </BarChart>
               </ResponsiveContainer>
             )}
           </div>
         </div>
 
-        {/* Category donut */}
-        <div
-          className="lg:col-span-2 bg-app-surface rounded-2xl border border-app-border/40 overflow-hidden"
-          style={{ boxShadow: 'var(--app-shadow-md)' }}
-        >
-          <div className="px-5 pt-5 pb-3 border-b border-app-border/40">
-            <h2 className="text-base font-bold text-app-text">Gasto por categoría</h2>
-            <p className="text-xs text-app-text-subtle mt-0.5 capitalize">
-              {PERIODS.find((p) => p.key === periodType)?.label ?? 'Mes'} actual
-            </p>
+        {/* Expenses by category donut */}
+        <div className="lg:col-span-2 bg-app-surface rounded-2xl border border-app-border/40 shadow-sm overflow-hidden">
+          <div className="px-5 pt-4 pb-3 border-b border-app-border/40">
+            <h2 className="text-sm font-bold text-app-text">Gastos por categoría</h2>
+            <p className="text-xs text-app-text-subtle mt-0.5">{currentPeriodLabel} actual</p>
           </div>
-
           <div className="px-5 py-4">
             {summaryLoading ? (
-              <div className="space-y-4">
-                <Skeleton className="h-44 w-full bg-app-surface-alt rounded-xl" />
+              <div className="space-y-3">
+                <Skeleton className="h-48 w-full bg-app-surface-alt rounded-xl" />
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="flex items-center gap-3">
-                    <Skeleton className="h-7 w-7 rounded-full bg-app-surface-alt shrink-0" />
-                    <div className="flex-1 space-y-1.5">
-                      <div className="flex justify-between gap-2">
-                        <Skeleton className="h-3 w-24 bg-app-surface-alt" />
-                        <Skeleton className="h-3 w-14 bg-app-surface-alt" />
-                      </div>
-                      <Skeleton className="h-1 w-full bg-app-surface-alt rounded-full" />
-                    </div>
+                    <Skeleton className="h-6 w-6 rounded-full bg-app-surface-alt shrink-0" />
+                    <Skeleton className="h-3 flex-1 bg-app-surface-alt" />
+                    <Skeleton className="h-3 w-14 bg-app-surface-alt" />
                   </div>
                 ))}
               </div>
             ) : pieData.length === 0 ? (
-              <div className="flex items-center justify-center h-64 text-app-text-subtle text-sm">
-                Sin gastos registrados
+              <div className="flex flex-col items-center justify-center gap-2 h-64 text-center">
+                <div className="w-16 h-16 rounded-full bg-app-surface-alt flex items-center justify-center">
+                  <span className="text-2xl">📊</span>
+                </div>
+                <p className="text-sm font-medium text-app-text-subtle">Sin gastos registrados</p>
+                <p className="text-xs text-app-text-subtle/70">Registra un gasto para ver la distribución</p>
               </div>
             ) : (
               <>
-                <ResponsiveContainer width="100%" height={172}>
+                {/* Donut */}
+                <ResponsiveContainer width="100%" height={192}>
                   <PieChart>
                     <Pie
                       data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={52}
-                      outerRadius={82}
-                      paddingAngle={3}
+                      cx="50%" cy="50%"
+                      innerRadius={56} outerRadius={88}
+                      paddingAngle={2}
                       dataKey="value"
                       stroke="none"
-                      cornerRadius={5}
+                      cornerRadius={4}
                       isAnimationActive
                       animationDuration={700}
                       animationEasing="ease-out"
                     >
                       {pieData.map((entry, i) => (
-                        <Cell key={i} fill={entry.color} style={{ filter: `drop-shadow(0 2px 6px ${entry.color}44)` }} />
+                        <Cell key={i} fill={entry.color} opacity={0.92} />
                       ))}
                       <Label
                         position="center"
@@ -308,12 +274,18 @@ export default function DashboardPage() {
                           const total = summary?.total_expenses ?? 0
                           return (
                             <g>
-                              <text x={vb.cx} y={vb.cy - 8} textAnchor="middle"
-                                style={{ fontSize: 15, fontWeight: 800, fill: 'rgb(var(--app-text))', letterSpacing: '-0.5px' }}>
+                              <text
+                                x={vb.cx} y={vb.cy - 8}
+                                textAnchor="middle"
+                                style={{ fontSize: 15, fontWeight: 800, fill: 'rgb(var(--app-text))', fontFamily: 'ui-monospace, monospace' }}
+                              >
                                 {formatCurrency(total)}
                               </text>
-                              <text x={vb.cx} y={vb.cy + 9} textAnchor="middle"
-                                style={{ fontSize: 9, fill: 'rgb(var(--app-text-subtle))', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                              <text
+                                x={vb.cx} y={vb.cy + 10}
+                                textAnchor="middle"
+                                style={{ fontSize: 9, fill: 'rgb(var(--app-text-subtle))', letterSpacing: '0.08em', textTransform: 'uppercase' }}
+                              >
                                 TOTAL GASTOS
                               </text>
                             </g>
@@ -325,25 +297,18 @@ export default function DashboardPage() {
                   </PieChart>
                 </ResponsiveContainer>
 
-                {/* Legend — 2-line row per category */}
-                <div className="space-y-3 mt-3">
+                {/* Category legend */}
+                <div className="space-y-2 mt-1">
                   {pieData.map((item, i) => (
-                    <div key={i} className="flex items-center gap-3">
+                    <div key={i} className="flex items-center gap-2.5">
                       <CategoryIcon icon={item.icon} color={item.color} size="sm" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2 mb-1.5">
-                          <span className="text-xs font-semibold text-app-text truncate">{item.name}</span>
-                          <span className="text-xs font-bold tabular-nums text-app-text shrink-0">
-                            {formatCurrency(item.value)}
-                          </span>
-                        </div>
-                        <div className="h-1 rounded-full overflow-hidden bg-app-surface-alt">
-                          <div
-                            className="h-full rounded-full transition-[width] duration-700 ease-out"
-                            style={{ width: `${item.pct}%`, backgroundColor: item.color }}
-                          />
-                        </div>
-                      </div>
+                      <span className="text-xs text-app-text truncate flex-1">{item.name}</span>
+                      <span className="text-xs tabular-nums font-mono font-semibold text-app-text shrink-0">
+                        {item.pct.toFixed(0)}%
+                      </span>
+                      <span className="text-xs tabular-nums font-mono text-app-text-subtle shrink-0 w-20 text-right">
+                        {formatCurrency(item.value)}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -351,18 +316,23 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+
       </div>
 
-      {/* ── Bottom 3-col ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 animate-fade-up" style={{ animationDelay: '180ms' }}>
-        <RecentTransactions transactions={transactions} loading={txLoading} />
-        <BudgetProgressList budgets={budgets} loading={budgetsLoading} />
-        <GoalProgressList goals={goals} loading={goalsLoading} />
+      {/* ── Bottom grid: recent transactions + budgets & goals ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2">
+          <RecentTransactions transactions={transactions} loading={txLoading} />
+        </div>
+        <div className="space-y-4">
+          <BudgetProgressList budgets={budgets} loading={budgetsLoading} />
+          <GoalProgressList goals={goals} loading={goalsLoading} />
+        </div>
       </div>
 
       <TransactionFormModal
         recentSource={transactions}
-        onSuccess={() => { refresh(); refreshTx(); refreshBudgets(); refreshCounts() }}
+        onSuccess={() => { refresh(); refreshTx(); refreshBudgets() }}
       />
     </div>
   )

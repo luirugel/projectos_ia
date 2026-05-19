@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
@@ -39,18 +40,20 @@ export const viewport: Viewport = {
   colorScheme: "light dark",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const nonce = (await headers()).get("x-nonce") ?? undefined
+
   return (
     <html lang="es" suppressHydrationWarning>
       {/* suppressHydrationWarning: browser extensions (Grammarly, etc.)
           inject data-* attributes onto <body> before React hydrates.
           The flag only applies one level deep, so it must be here too. */}
       <body suppressHydrationWarning className={`${plusJakarta.variable} ${geistMono.variable} antialiased min-h-screen`}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange nonce={nonce}>
           {children}
         </ThemeProvider>
         <ServiceWorkerRegister />

@@ -1,18 +1,30 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 
-// Open-redirect guard: only allow same-site absolute paths. Rejects
-// protocol-relative ("//evil.com"), backslash tricks, and absolute URLs.
+// Open-redirect guard: resolves the path against a dummy origin and rejects
+// anything that lands on a different origin (handles //, /\, %2f, %2F, etc.)
 function safeNext(raw: string | null): string {
-  if (!raw || !raw.startsWith("/")) return "/"
-  if (raw.startsWith("//") || raw.startsWith("/\\") || raw.startsWith("/%2f")) return "/"
-  return raw
+  if (!raw) return "/"
+  try {
+    const resolved = new URL(raw, "https://example.com")
+    if (resolved.origin !== "https://example.com") return "/"
+    return resolved.pathname + resolved.search
+  } catch {
+    return "/"
+  }
 }
 
-// Don't reflect an unbounded attacker-influenced string into the UI.
-function safeError(raw: string | null, fallback: string): string {
-  const s = (raw ?? "").replace(/[\r\n]/g, " ").trim()
-  return s ? s.slice(0, 200) : fallback
+// Whitelist of known OAuth error codes → user-facing Spanish messages.
+// Never reflect the raw error_description (attacker-controlled) into the UI.
+const OAUTH_ERROR_MESSAGES: Record<string, string> = {
+  access_denied: 'Inicio de sesión cancelado.',
+  provider_not_enabled: 'Este método de inicio de sesión no está disponible.',
+  server_error: 'Error del servidor. Intenta de nuevo.',
+  temporarily_unavailable: 'Servicio temporalmente no disponible.',
+}
+
+function safeOAuthError(code: string | null): string {
+  return OAUTH_ERROR_MESSAGES[code ?? ''] ?? 'No se pudo iniciar sesión.'
 }
 
 export async function GET(request: Request) {
@@ -20,13 +32,11 @@ export async function GET(request: Request) {
   const code = searchParams.get("code")
   const next = safeNext(searchParams.get("next"))
 
-  // The OAuth provider (or Supabase) can bounce back here with an error
-  // instead of a code — e.g. provider not enabled, consent denied.
-  const providerError = searchParams.get("error_description") ?? searchParams.get("error")
-
-  if (providerError) {
+  // The OAuth provider can bounce back here with an error instead of a code.
+  const errorCode = searchParams.get("error")
+  if (errorCode) {
     return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent(safeError(providerError, "No se pudo iniciar sesión."))}`,
+      `${origin}/login?error=${encodeURIComponent(safeOAuthError(errorCode))}`,
     )
   }
 
@@ -37,7 +47,7 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${origin}${next}`)
     }
     return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent(safeError(error.message, "No se pudo iniciar sesión."))}`,
+      `${origin}/login?error=${encodeURIComponent("No se pudo iniciar sesión.")}`,
     )
   }
 

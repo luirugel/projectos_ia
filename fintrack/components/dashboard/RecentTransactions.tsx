@@ -22,10 +22,7 @@ export function RecentTransactions({ transactions, loading }: RecentTransactions
   }).length
 
   return (
-    <div
-      className="bg-app-surface rounded-2xl border border-app-border/40 flex flex-col overflow-hidden"
-      style={{ boxShadow: 'var(--app-shadow-md)' }}
-    >
+    <div className="bg-app-surface rounded-2xl border border-app-border/40 flex flex-col overflow-hidden shadow-sm">
       {/* Header */}
       <div className="flex items-start justify-between px-5 pt-5 pb-3 border-b border-app-border/40">
         <div>
@@ -46,7 +43,7 @@ export function RecentTransactions({ transactions, loading }: RecentTransactions
       <div className="flex-1 divide-y divide-app-border/30">
         {loading ? (
           Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-3 px-5 py-3.5">
+            <div key={i} className="flex items-center gap-3 px-5 py-2.5">
               <Skeleton className="h-8 w-8 rounded-full bg-app-surface-alt shrink-0" />
               <div className="flex-1 space-y-1.5">
                 <Skeleton className="h-3.5 w-32 bg-app-surface-alt" />
@@ -65,11 +62,11 @@ export function RecentTransactions({ transactions, loading }: RecentTransactions
             <p className="text-xs text-app-text-subtle/70 text-center">Registra un gasto o ingreso para empezar</p>
           </div>
         ) : (
-          transactions.slice(0, 7).map((tx) => (
+          transactions.slice(0, 5).map((tx) => (
             <Link
               key={tx.id}
               href={`/transactions/${tx.id}`}
-              className="flex items-center gap-3 px-5 py-3.5 hover:bg-app-surface-alt/50 transition-colors duration-150 group"
+              className="flex items-center gap-3 px-5 py-2.5 hover:bg-app-surface-alt/50 transition-colors duration-150 group"
             >
               <CategoryIcon
                 icon={tx.category?.icon ?? (tx.type === 'income' ? 'plus-circle' : 'tag')}

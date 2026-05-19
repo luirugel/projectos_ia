@@ -12,7 +12,11 @@ export default function DashboardError({
   reset: () => void
 }) {
   useEffect(() => {
-    console.error('[Dashboard error]', error)
+    if (process.env.NODE_ENV === 'production') {
+      console.error('[Dashboard error] digest:', error.digest)
+    } else {
+      console.error('[Dashboard error]', error)
+    }
   }, [error])
 
   return (
@@ -39,7 +43,7 @@ export default function DashboardError({
           <Home className="h-4 w-4" /> Ir al inicio
         </Link>
       </div>
-      {error.digest && (
+      {process.env.NODE_ENV === 'development' && error.digest && (
         <p className="text-xs text-app-text-subtle/40 mt-6 font-mono">ID: {error.digest}</p>
       )}
     </div>

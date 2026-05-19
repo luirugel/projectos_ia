@@ -2,39 +2,28 @@ import withPWAInit from "@ducanh2912/next-pwa";
 
 const withPWA = withPWAInit({
   dest: "public",
-  cacheOnFrontEndNav: true,
-  aggressiveFrontEndNavCaching: true,
-  reloadOnOnline: true,
   disable: process.env.NODE_ENV === "development",
-  workboxOptions: { disableDevLogs: true },
+  // Conservative settings for a finance app — no caching of nav/HTML.
+  // The hand-rolled public/sw.js handles all caching strategy.
+  cacheOnFrontEndNav: false,
+  aggressiveFrontEndNavCaching: false,
+  reloadOnOnline: false,
+  workboxOptions: {
+    disableDevLogs: true,
+    runtimeCaching: [],
+  },
 });
 
 /** @type {import('next').NextConfig} */
 
 const isProd = process.env.NODE_ENV === "production";
 
-// Baseline defense-in-depth headers. CSP still allows 'unsafe-inline'
-// /'unsafe-eval' because Next's hydration bootstrap and Fast Refresh need
-// them without a nonce pipeline; tightening to nonce-based CSP is a
-// follow-up. connect/img are scoped to self + the Supabase project.
+// Non-CSP security headers. CSP is generated per-request in middleware.ts
+// (nonce-based, with x-nonce forwarded to Server Components).
 //
 // HSTS and `upgrade-insecure-requests` are PRODUCTION-ONLY: in local dev
 // they would force HTTP requests to HTTPS, breaking access from another
 // device over the LAN (e.g. testing on a phone at http://<lan-ip>:3000).
-const csp = [
-  "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://*.supabase.co",
-  "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
-  "frame-ancestors 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "object-src 'none'",
-  ...(isProd ? ["upgrade-insecure-requests"] : []),
-].join("; ");
-
 const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -52,7 +41,6 @@ const securityHeaders = [
         },
       ]
     : []),
-  { key: "Content-Security-Policy", value: csp },
 ];
 
 const nextConfig = {
@@ -61,6 +49,10 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "**.supabase.co",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
       },
     ],
   },

@@ -103,7 +103,7 @@ export function useTransactions(initialFilters?: TransactionFilters): UseTransac
     if (filters.type) query = query.eq('type', filters.type)
     if (filters.account_id) query = query.eq('account_id', filters.account_id)
     if (filters.category_id) query = query.eq('category_id', filters.category_id)
-    if (filters.search) query = query.ilike('description', `%${filters.search}%`)
+    if (filters.search) query = query.ilike('description', `%${filters.search.slice(0, 100)}%`)
 
     const { data, error: err, count } = await query
 

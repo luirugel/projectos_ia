@@ -2,10 +2,29 @@
 
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
+import { headers } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
 import { toUserMessage } from "@/lib/utils/errors"
+import { siteUrl } from "@/lib/config"
+import { checkRateLimit } from "@/lib/rateLimit"
+
+// x-real-ip is set by Vercel/Nginx from the actual socket address and cannot
+// be forged by the client. Fall back to the rightmost XFF entry (appended by
+// the last trusted proxy) only when x-real-ip is absent.
+async function clientIp(): Promise<string> {
+  const h = await headers()
+  const realIp = h.get('x-real-ip')
+  if (realIp) return realIp.trim()
+  const xff = h.get('x-forwarded-for')
+  return xff?.split(',').at(-1)?.trim() ?? 'unknown'
+}
 
 export async function signIn(formData: FormData) {
+  const ip = await clientIp()
+  if (!await checkRateLimit(`signin:${ip}`, 10, 60_000)) {
+    return { error: 'Demasiados intentos. Espera un momento.' }
+  }
+
   const supabase = await createClient()
 
   const email = formData.get("email") as string
@@ -22,6 +41,11 @@ export async function signIn(formData: FormData) {
 }
 
 export async function signUp(formData: FormData) {
+  const ip = await clientIp()
+  if (!await checkRateLimit(`signup:${ip}`, 5, 300_000)) {
+    return { error: 'Demasiados intentos. Espera unos minutos.' }
+  }
+
   const supabase = await createClient()
 
   const email = formData.get("email") as string
@@ -33,7 +57,7 @@ export async function signUp(formData: FormData) {
     password,
     options: {
       data: { full_name: full_name || null },
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/auth/callback`,
+      emailRedirectTo: `${siteUrl()}/auth/callback`,
     },
   })
 
@@ -50,12 +74,17 @@ export async function signUp(formData: FormData) {
 }
 
 export async function forgotPassword(formData: FormData) {
+  const ip = await clientIp()
+  if (!await checkRateLimit(`forgot:${ip}`, 3, 300_000)) {
+    return { error: 'Demasiados intentos. Espera unos minutos.' }
+  }
+
   const supabase = await createClient()
 
   const email = formData.get("email") as string
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/auth/callback?next=/settings`,
+    redirectTo: `${siteUrl()}/auth/callback?next=/settings`,
   })
 
   if (error) {
@@ -66,12 +95,17 @@ export async function forgotPassword(formData: FormData) {
 }
 
 export async function signInWithGoogle() {
+  const ip = await clientIp()
+  if (!await checkRateLimit(`oauth:${ip}`, 20, 60_000)) {
+    return { error: 'Demasiados intentos. Espera un momento.' }
+  }
+
   const supabase = await createClient()
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/auth/callback`,
+      redirectTo: `${siteUrl()}/auth/callback`,
     },
   })
 
@@ -80,6 +114,15 @@ export async function signInWithGoogle() {
   }
 
   if (data.url) {
+    const supabaseHost = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!).hostname
+    const allowed = [
+      'https://accounts.google.com',
+      `https://${supabaseHost}`,
+      `https://${new URL(siteUrl()).hostname}`,
+    ]
+    if (!allowed.some(o => data.url!.startsWith(o))) {
+      return { error: 'URL de autenticación inesperada.' }
+    }
     redirect(data.url)
   }
 }

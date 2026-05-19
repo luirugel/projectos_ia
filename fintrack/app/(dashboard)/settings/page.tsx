@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { createClient } from '@/lib/supabase/client'
 import { signOut } from '@/lib/actions/auth'
+import { changePassword } from '@/lib/actions/settings'
 import { toUserMessage } from '@/lib/utils/errors'
 import type { Profile } from '@/types/database'
 
@@ -20,17 +21,18 @@ export default function ConfiguracionPage() {
   const [fullName, setFullName] = useState('')
   const [currency, setCurrency] = useState('USD')
 
-  const [pwNew, setPwNew]       = useState('')
+  const [pwCurrent, setPwCurrent] = useState('')
+  const [pwNew, setPwNew]         = useState('')
   const [pwConfirm, setPwConfirm] = useState('')
-  const [pwSaving, setPwSaving] = useState(false)
-  const [pwError, setPwError]   = useState<string | null>(null)
-  const [pwSaved, setPwSaved]   = useState(false)
+  const [pwSaving, setPwSaving]   = useState(false)
+  const [pwError, setPwError]     = useState<string | null>(null)
+  const [pwSaved, setPwSaved]     = useState(false)
 
   useEffect(() => {
     async function loadProfile() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { setLoading(false); return }
-      const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+      const { data } = await supabase.from('profiles').select('id, full_name, currency, timezone, avatar_url, created_at, updated_at').eq('id', user.id).single()
       if (data) {
         setProfile(data)
         setFullName(data.full_name ?? '')
@@ -46,9 +48,10 @@ export default function ConfiguracionPage() {
     setSaving(true); setError(null); setSaved(false)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setSaving(false); return }
+    const safeName = fullName.trim().slice(0, 100) || null
     const { error: err } = await supabase
       .from('profiles')
-      .update({ full_name: fullName.trim() || null, currency })
+      .update({ full_name: safeName, currency })
       .eq('id', user.id)
     if (err) { setError(toUserMessage(err)) } else { setSaved(true); setTimeout(() => setSaved(false), 3000) }
     setSaving(false)
@@ -58,12 +61,11 @@ export default function ConfiguracionPage() {
     e.preventDefault()
     setPwError(null); setPwSaved(false)
     if (pwNew !== pwConfirm) { setPwError('Las contraseñas no coinciden.'); return }
-    if (pwNew.length < 6) { setPwError('La contraseña debe tener al menos 6 caracteres.'); return }
     setPwSaving(true)
-    const { error: err } = await supabase.auth.updateUser({ password: pwNew })
-    if (err) { setPwError(toUserMessage(err)) } else {
+    const result = await changePassword(pwCurrent, pwNew)
+    if (result.error) { setPwError(result.error) } else {
       setPwSaved(true)
-      setPwNew(''); setPwConfirm('')
+      setPwCurrent(''); setPwNew(''); setPwConfirm('')
       setTimeout(() => setPwSaved(false), 3000)
     }
     setPwSaving(false)
@@ -112,6 +114,8 @@ export default function ConfiguracionPage() {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Tu nombre"
+              maxLength={100}
+              autoComplete="name"
               className="border-app-border bg-app-surface-alt text-app-text placeholder:text-app-text-subtle rounded-xl"
             />
           </div>
@@ -169,13 +173,27 @@ export default function ConfiguracionPage() {
         <form onSubmit={handleChangePassword} className="space-y-4">
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold uppercase tracking-wide text-app-text-subtle">
+              Contraseña actual
+            </Label>
+            <Input
+              type="password"
+              value={pwCurrent}
+              onChange={(e) => setPwCurrent(e.target.value)}
+              placeholder="Tu contraseña actual"
+              autoComplete="current-password"
+              className="border-app-border bg-app-surface-alt text-app-text placeholder:text-app-text-subtle rounded-xl"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold uppercase tracking-wide text-app-text-subtle">
               Nueva contraseña
             </Label>
             <Input
               type="password"
               value={pwNew}
               onChange={(e) => setPwNew(e.target.value)}
-              placeholder="Mínimo 6 caracteres"
+              placeholder="Mínimo 8 caracteres"
+              autoComplete="new-password"
               className="border-app-border bg-app-surface-alt text-app-text placeholder:text-app-text-subtle rounded-xl"
             />
           </div>
@@ -188,6 +206,7 @@ export default function ConfiguracionPage() {
               value={pwConfirm}
               onChange={(e) => setPwConfirm(e.target.value)}
               placeholder="Repite la contraseña"
+              autoComplete="new-password"
               className="border-app-border bg-app-surface-alt text-app-text placeholder:text-app-text-subtle rounded-xl"
             />
           </div>
